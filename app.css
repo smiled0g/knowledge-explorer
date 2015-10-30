@@ -1,0 +1,335 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 300;
+  background: #d3d1d1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.warning {
+  color: orangered;
+  font-style: italic;
+}
+
+body > nav {
+  background: #333;
+  color: #f37a94;
+  box-shadow: 0px 1px 5px rgba(0,0,0,0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: left;
+  padding: 15px 30px;
+  height: 60px;
+  z-index: 100;
+}
+
+body > nav > .logo {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+body > nav > .logo i {
+  font-size: 0.7em;
+  margin: 0 1px;
+}
+
+body > footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+}
+
+#VIEWPORT {
+  position: relative;
+  z-index: 0;
+  background: #3b3b3b;
+  height: 100%;
+}
+
+.scene {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding-top: 60px;
+}
+
+.scene.hide {
+  display: none !important;  
+}
+
+#SCENE_INTRO {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+#SCENE_INTRO .instruction {
+  margin: 0 auto;
+  padding: 10px 0 20px;
+  background: #3b3b3b;
+  color: #eee;
+  flex: initial;
+}
+
+#SCENE_INTRO .dz-preview {
+  /* hide dropzone preview */
+  display: none;
+}
+
+#SCENE_INTRO .robot {
+  flex: 1;
+  margin: 10px 30px 50px;
+  background: url('images/robot.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  border: dashed 3px #55f1a4;
+  cursor: pointer;
+}
+
+#SCENE_EDIT {
+  display: flex;  
+}
+
+#SCENE_EDIT .feature-graph-container {
+  flex: 1;
+  font-weight: 500;
+}
+
+#SCENE_EDIT .wiki-graph-container {
+  position: absolute;
+  background: #333;
+  top: 80px;
+  right: 30px;
+  bottom: 30px;
+  left: 460px;
+  z-index: 1;
+  box-shadow: 0px 1px 5px rgba(0,0,0,0.5);
+  display: none;
+}
+
+#SCENE_EDIT .wiki-graph-container > i.close-wiki-graph-container {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 25px;
+  right: 10px;
+  top: 5px;
+  cursor: pointer;
+}
+
+#SCENE_EDIT .wiki-graph-container > i.close-wiki-graph-container:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#SCENE_EDIT .feature-explorer {
+  flex: initial;
+  position: relative;
+  padding: 20px 20px 20px 40px;
+  width: 460px;
+  color: #f37a94;
+  display: flex;
+  flex-direction: column;
+}
+
+#SCENE_EDIT .feature-select-container {
+  flex: initial;
+  min-height: 105px;
+  background: rgba(243, 122, 148, 0.2);
+  box-shadow: 0px 1px 5px rgba(0,0,0,0.5);
+  padding: 20px 20px 25px;
+}
+
+#SCENE_EDIT .feature-explorer h1 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+#SCENE_EDIT .select2-container {
+  width: 100%;
+  font-size: 14px;
+}
+
+#SCENE_EDIT .feature-edit {
+  flex: initial;  
+  padding: 20px;
+  overflow: auto;
+  background: #333;
+  box-shadow: 0px 1px 5px rgba(0,0,0,0.5);
+}
+
+#SCENE_EDIT .feature-edit label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+#SCENE_EDIT .feature-edit label:not(:first-child) {
+  margin-top: 20px;
+}
+
+#SCENE_EDIT .feature-edit input,
+#SCENE_EDIT .feature-edit textarea{
+  display: block;
+  padding: 5px 5px;
+  width: 100%;
+  border: 0;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
+#SCENE_EDIT .feature-edit [name="images"] {
+  height: 154px;
+  position: relative;
+}
+
+#SCENE_EDIT .image-thumbnail {
+  height: 70px;
+  width: 70px;
+  background-position: center;
+  background-size: cover;
+  margin: 0 2px 2px 0;
+  display: inline-block;
+}
+
+.button {
+  border: 0;
+  background: #f37a94;
+  color: #fff;
+  text-align: center;
+  padding: 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.button.full {
+  width: 100%; 
+}
+
+.button:hover {
+  background: #fe5e80;
+}
+
+/*
+ * FeatureGraph styles
+ */
+
+.node {
+  cursor: pointer;
+}
+
+.node text {
+  fill: #5aceff;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.node text.relationship {
+  fill: rgba(255, 206, 82, 0.85);
+}
+
+.overlay{
+  /* background-color:#EEE; */
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.link {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 1.5px;
+}
+
+.link.highlight {
+  stroke: rgba(255, 255, 255, 0.8);
+}
+
+.templink {
+  fill: none;
+  stroke: red;
+  stroke-width: 3px;
+}
+
+.ghostCircle.show{
+  display:block;
+}
+
+.ghostCircle, .activeDrag .ghostCircle{
+  display: none;
+}
+
+/*
+ * Loading animation
+ */
+
+.loading {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  margin: -35px 0 0 -35px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(243, 122, 148, 0.8);;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+.loading:before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(243, 122, 148, 0.7);
+  animation: spin 3s linear infinite;
+}
+
+.loading:after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(243, 122, 148, 0.9);;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+      -webkit-transform: rotate(0deg);
+      -ms-transform: rotate(0deg);
+      transform: rotate(0deg);
+  }
+
+  100% {
+      -webkit-transform: rotate(360deg);
+      -ms-transform: rotate(360deg);
+      transform: rotate(360deg);
+  }
+}

@@ -1,5 +1,7 @@
 AIMind Explorer
 ===================
+![david-dm](https://david-dm.org/smiled0g/aimind-explorer.svg)
+
 A tool for visualizing and editing AIMind XML file. The work is under progress and subjected to changes. 
 
 What technology does it use

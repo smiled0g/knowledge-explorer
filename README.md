@@ -21,3 +21,12 @@ In the project's root directory, runs
 ```
 ./node_modules/.bin/electron .
 ```
+
+Running in high resolution monitor
+-------------
+High resolution monitor/laptop can make the UI really small and hard to read. To fix this issue, go to `index.html` and uncomment the line
+```
+// require('web-frame').setZoomFactor(1.25);
+```
+
+This will set zoom factor to be slightly higher than normal, so everything looks as we expect it to be. We will make this progress automatic later, but we'll leave it for later ;)

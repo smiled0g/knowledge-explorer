@@ -1,8 +1,8 @@
 Knowledge Explorer
 ===================
-![david-dm](https://david-dm.org/smiled0g/aimind-explorer.svg)
+![david-dm](https://david-dm.org/smiled0g/knowledge-explorer.svg)
 
-A tool for visualizing and editing AIMind XML file. The work is under progress and subjected to changes. 
+A tool for visualizing and editing knowledge graph.
 
 What technology does it use
 -------------

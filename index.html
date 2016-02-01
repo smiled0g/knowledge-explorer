@@ -1,78 +1,78 @@
 <!doctype html>
-    <head>
-        <meta charset="utf-8">
-        <title>AIMind Explorer</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css'>
-        <link href='http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css' rel='stylesheet' type='text/css'>
-        <link href="http://csshake.surge.sh/csshake.min.css" rel='stylesheet' type="text/css">
-        <link href="node_modules/select2-browserify/select2/select2.css" rel="stylesheet" />
-        <link rel="stylesheet" href="app.css">
-    </head>
-    <body>
-      <nav class="navbar" role="navigation">
-        <div class="logo">
-          AIMind expl<i class="ion ion-aperture"></i>rer
-        </div>
-      </nav>
-      
-      <div id="VIEWPORT">
-        <div class="scene hide" id="SCENE_INTRO">
-          <div class="instruction">
-            <h1>Upload your AIMind XML file!</h1>
-            <p>One robot to rule them all... Click or drop a file on the shaking robot below</p>
-            </p>
-          </div>
-          <form class="robot shake" id="FILE_LISTENER"></form>
-        </div>
+  <head>
+    <meta charset="utf-8">
+    <title>Knowledge Explorer</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css'>
+    <link href='http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/svg.css">
+  </head>
+  <body>
+    <div id="console">
+      <div id="logo">
+        Knowledge Explorer
+        <div id="toggle-list-of-commands">
+          List of commands
+          <pre id="list-of-commands">
+<b>1 | What is &lt;keyword&gt; / Who is &lt;keyword&gt; / Find &lt;keyword&gt;</b>
+Find DBPedia resource that is relevant to the keyword and present it in resource section.
 
-        <div class="scene" id="SCENE_EDIT">
-          <div class="feature-explorer">
-            <div class="feature-select-container">
-              <h1>Feature</h1>
-              <select name="feature-select">
-                <option value="AK">Alaska</option>
-                <option value="HI">Hawaii</option>
-              </select>
-            </div>
-            <div class="feature-edit">
-              <label for="name_eng">Name</label>
-                <input type="text" name="name_eng" />
-                <input type="text" name="name_chi" />
-              <label for="speak_eng">Speak</label>
-                <textarea type="text" rows="3" name="speak_eng"></textarea>
-                <textarea type="text" rows="3" name="speak_chi"></textarea>
-              <label for="images">Images</label>
-                <div name="images">
-                  <div class="loading"></div>
-                  <div class="result"></div>
-                </div>
-              <label for="wikis">Wikis</label>
-                <button name="wikis" class="button full">Expand the feature using Wiki data</button>
-            </div>
-          </div>
-          <div class="feature-graph-container">
-            
-          </div>
-          <div class="wiki-graph-container">
-            <i class="ion ion-android-close close-wiki-graph-container"></i>
-          </div>
+<b>2 | Add to graph</b>
+Add the resource that is already in the resource section to the graph.
+
+<b>3 | Link &lt;resource&gt; and &lt;resource&gt;</b>
+Create a link from one resource to another.
+
+<b>4 | Unlink &lt;resource&gt; and &lt;resource&gt;</b>
+Remove the link from one resource to another.
+
+<b>5 | From &lt;resource&gt;, find &lt;resource-type&gt;</b>
+Find resources of a certain type (person/place/company/etc.) that have a relationship with the given resource.
+
+<b>6 | Add &lt;resource&gt; to graph</b>
+Add the expanded resource to the graph
+
+<b>7 | Remove &lt;resource&gt;</b>
+Remove the resource
+          </pre>
         </div>
       </div>
-      
-      <script>
-        // Scale-up for demo in Retina display
-        // require('web-frame').setZoomFactor(1.25);
-        
-        // Init jquery
-        window.$ = window.jQuery = require('jquery');
-        
-        $(function(){
-          // Actually run the program!
-          var app = require('./app.js');
-          app.run();
-        });
-      </script>
-    </body>
+      <div id="query-container">
+        <input type="text" id="query" placeholder="Type your query here"/>
+      </div>
+      <div id="chatbox">
+        <div class="response">
+          Hi. My name is Jimmy. I'm here to help you build information graph. You can either use your voice, or type a command in the box above and hit enter.
+        </div>
+      </div>
+    </div>
+    <div id="graph-container">
+      <div id="graph"></div>
+    </div>
+
+
+    <script src="lib/colorbrewer.js"></script>
+    <script src="lib/geometry.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.0.0/annyang.min.js"></script>
+    <script>
+      // Scale-up for demo in Retina display
+      require('web-frame').setZoomFactor(1.25);
+
+      // Init jquery
+      window.$ = window.jQuery = require('jquery');
+
+      $(function(){
+        // Actually run the program!
+
+        // Load sample data
+        var data = require('./saved-data/les-mis.json')
+
+        // Start that knowledge engine
+        var Engine = require('./app/engine');
+        Engine.run(data);
+      });
+    </script>
+  </body>
 </html>

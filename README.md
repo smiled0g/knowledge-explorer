@@ -1,4 +1,4 @@
-AIMind Explorer
+Knowledge Explorer
 ===================
 ![david-dm](https://david-dm.org/smiled0g/aimind-explorer.svg)
 
@@ -6,7 +6,7 @@ A tool for visualizing and editing AIMind XML file. The work is under progress a
 
 What technology does it use
 -------------
-The app is made with [Electron](http://electron.atom.io/). We use [Data-Driven Documents (D3)](http://d3js.org/) for the data visualization. 
+The app is made with [Electron](http://electron.atom.io/). We use [Data-Driven Documents (D3)](http://d3js.org/) for the data visualization.
 
 Since the technology stack is compatible to run in all modern browser with some help form [Browserify](http://browserify.org/), we are planning to build the project for browsers at some point of time.
 

@@ -1,17 +1,18 @@
 {
-  "name": "research",
+  "name": "knowledge-explorer",
   "version": "0.1.0",
   "main": "main.js",
   "dependencies": {
-    "d3": "^3.5.6",
+    "d3": "^3.5.12",
     "dropzone": "^4.2.0",
     "jquery": "^2.1.4",
     "querystring": "^0.2.0",
     "request": "^2.65.0",
-    "select2-browserify": "^3.4.5"
+    "select2-browserify": "^3.4.5",
+    "wiki-infobox-parser": "^0.1.11"
   },
   "devDependencies": {
-    "electron-prebuilt": "^0.33.7",
-    "electron-rebuild": "^1.0.1"
+    "electron-prebuilt": "*",
+    "electron-rebuild": "*"
   }
 }

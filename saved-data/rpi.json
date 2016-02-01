@@ -1,0 +1,129 @@
+{
+    "config": {
+        "title" : "Rensselaer Polytechnic Institute",
+        "graph" : {
+            "linkDistance" : 150,
+            "charge"       : -400,
+            "height"       : 800,
+            "numColors"    : 12,
+            "labelPadding" : {
+                "left"   : 3,
+                "right"  : 3,
+                "top"    : 2,
+                "bottom" : 2
+            },
+            "labelMargin" : {
+                "left"   : 3,
+                "right"  : 3,
+                "top"    : 2,
+                "bottom" : 2
+            },
+            "ticksWithoutCollisions" : 50
+        },
+        "types" : {
+            "group0" : {
+                "short" : "Group 0",
+                "long"  : "Group 0 long name for docs"
+            },
+            "group1" : {
+                "short" : "Group 1",
+                "long"  : "Group 1 long name for docs"
+            },
+            "group2" : {
+                "short" : "Group 2",
+                "long"  : "Group 2 long name for docs"
+            },
+            "group3" : {
+                "short" : "Group 3",
+                "long"  : "Group 3 long name for docs"
+            },
+            "group4" : {
+                "short" : "Group 4",
+                "long"  : "Group 4 long name for docs"
+            },
+            "group5" : {
+                "short" : "Group 5",
+                "long"  : "Group 5 long name for docs"
+            },
+            "group6" : {
+                "short" : "Group 6",
+                "long"  : "Group 6 long name for docs"
+            },
+            "group7" : {
+                "short" : "Group 7",
+                "long"  : "Group 7 long name for docs"
+            },
+            "group8" : {
+                "short" : "Group 8",
+                "long"  : "Group 8 long name for docs"
+            },
+            "group9" : {
+                "short" : "Group 9",
+                "long"  : "Group 9 long name for docs"
+            },
+            "group10" : {
+                "short" : "Group 10",
+                "long"  : "Group 10 long name for docs"
+            }
+        },
+        "constraints" : [
+        ]
+    },
+
+    "graph": {
+      "Rensselaer Polytechnic Institute":{
+         "name":"[1] Rensselaer Polytechnic Institute",
+         "type":"group0",
+         "depends":[
+            "Private University",
+            "Urban Area"
+         ],
+         "dependedOnBy":[
+            "Shirley Ann Jackson",
+            "James Hendler"
+         ],
+         "docs":""
+      },
+      "Private University":{
+         "name":"[2] Private University",
+         "type":"group1",
+         "depends":[
+         ],
+         "dependedOnBy":[
+           "Rensselaer Polytechnic Institute"
+         ],
+         "docs":""
+      },
+      "Urban Area":{
+         "name":"[5] Urban Area",
+         "type":"group2",
+         "depends":[
+         ],
+         "dependedOnBy":[
+           "Rensselaer Polytechnic Institute"
+         ],
+         "docs":""
+      },
+      "Shirley Ann Jackson":{
+         "name":"[3] Shirley Ann Jackson",
+         "type":"group3",
+         "depends":[
+           "Rensselaer Polytechnic Institute"
+         ],
+         "dependedOnBy":[
+         ],
+         "docs":""
+      },
+      "James Hendler":{
+         "name":"[4] James Hendler",
+         "type":"group3",
+         "depends":[
+           "Rensselaer Polytechnic Institute"
+         ],
+         "dependedOnBy":[
+         ],
+         "docs":""
+      }
+
+    }
+}

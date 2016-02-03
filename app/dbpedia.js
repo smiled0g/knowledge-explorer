@@ -1,5 +1,5 @@
 /*
- **  Helper that contains multiple DBPedia/Wikipedia query functions 
+ **  Helper that contains multiple DBPedia/Wikipedia query functions
  */
 
 var $ = require('jquery'),
@@ -63,6 +63,22 @@ module.exports = {
       function(data){ return onSuccess(data.results); },
       onFail
     );
+  },
+
+  getAbstractByUri: function(uri, onSuccess, onFail) {
+    var query = [
+       "PREFIX dbpedia: <http://dbpedia.org/resource/>",
+       "SELECT ?name ?abs ?chi",
+       "WHERE {",
+          "<" + uri + "> rdfs:label ?name.",
+          "<" + uri + "> dbo:abstract ?abs.",
+          "<" + uri + "> dbo:abstract ?chi.",
+          "FILTER (langMatches(lang(?name),'en')).",
+          "FILTER (langMatches(lang(?abs),'en')).",
+          "FILTER (langMatches(lang(?chi),'zh')).",
+       "}"
+      ].join(" ");
+    sparqlQueryJson(query, this.sparqlEndpoint, onSuccess, onFail, true);
   },
 
   // Fetch properties of a particular type of a resource with given uri

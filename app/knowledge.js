@@ -81,7 +81,7 @@ var Knowledge = {
   // Add a node to knowledge graph
   addNode: function(uri, name, relationships, redraw) {
     var graph = this.getGraph();
-    if(graph.graph[uri]) return;
+    if(graph.graph[uri]) return false;
 
     var ref = graph.refCount++;
     var nodeName = this.getNodeName(ref, name);

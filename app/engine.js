@@ -2,7 +2,8 @@ var DBPedia = require('./dbpedia'),
     Voice = require('./voice'),
     Console = require('./console'),
     Knowledge = require('./knowledge'),
-    SearchStorage = require('./search-storage');
+    SearchStorage = require('./search-storage'),
+    AIMind = require('./aimind');
 
 var run = function(data) {
   var Graph = require('./graph');
@@ -62,6 +63,7 @@ var handleSearchByKeyword = function(keyword) {
             uri: results[0].uri,
             label: results[0].label,
             description: formatted_description,
+            speak: first_sentence,
             relationships: relationships
           });
         });
@@ -87,7 +89,7 @@ var handleAddResourceToGraph = function(uri) {
   console.log(uri);
   var searchResult = SearchStorage.get(uri);
 
-  Knowledge.addNode(
+  return Knowledge.addNode(
     searchResult.uri,
     searchResult.label,
     searchResult.relationships,
@@ -108,6 +110,42 @@ var handleSeachByOntology = function(keyword, ontology) {
       showVoiceAndConsoleResponse('I\'m sorry, I couldn\'t find any '+ontology.toLowerCase()+' associated with resource '+keyword);
     }
   });
+}
+
+var handleGrow = function(keyword) {
+  keyword = keyword.replace(/\W/g, '')
+
+  var root_uri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
+      growQueue = [root_uri],
+      amountToGrow = 50;
+
+  while(growQueue.length > 0 && amountToGrow > 0) {
+    var uri = growQueue.shift();
+    console.log(uri);
+    if(Knowledge.getGraph().graph[uri] && uri!=root_uri) continue;
+    Object.keys(SearchStorage.get(uri).relationships).map(function(neighbor_uri){
+      console.log(neighbor_uri);
+      if(!SearchStorage.get(neighbor_uri)) {
+        DBPedia.getAbstractByUri(neighbor_uri, function(abstract_result){
+          DBPedia.getPropertiesByUri(neighbor_uri, function(relationships){
+            var abstract = abstract_result.results.bindings[0].abs.value;
+            var label = abstract_result.results.bindings[0].name.value;
+            SearchStorage.add({
+              uri: neighbor_uri,
+              label: label,
+              description: abstract,
+              speak: abstract,
+              relationships: relationships
+            });
+            if(handleAddResourceToGraph(neighbor_uri)) amountToGrow--;
+            growQueue.push(neighbor_uri);
+          });
+        });
+      } else {
+        if(handleAddResourceToGraph(neighbor_uri)) amountToGrow--;
+      }
+    });
+  }
 }
 
 var handleLink = function(r1, r2) {
@@ -150,7 +188,11 @@ var commands = {
     showVoiceAndConsoleResponse('Voice command deactivated');
   },
   'Mute': function() { Voice.mute(); },
-  'Unmute': function() { Voice.unmute(); }
+  'Unmute': function() { Voice.unmute(); },
+  'Export AIMind *filename': function(filename) {
+    AIMind.export(Knowledge.getGraph(), filename);
+  },
+  'Grow *keyword': handleGrow
 };
 
 

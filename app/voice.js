@@ -1,5 +1,10 @@
+/*
+ **  Voice engine controller
+ */
+
 var isMute = false;
 
+// Generate voice response
 var speak = function(text, voiceId) {
   if(isMute) return;
 
@@ -19,6 +24,7 @@ var speak = function(text, voiceId) {
   });
 }
 
+// Start voice recognition engine
 var listen = function(commands) {
   if (annyang) {
     annyang.debug();

@@ -1,3 +1,7 @@
+/*
+ **  Helper that contains multiple DBPedia/Wikipedia query functions 
+ */
+
 var $ = require('jquery'),
     infobox = require('wiki-infobox-parser');
 
@@ -50,6 +54,8 @@ function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
 module.exports = {
   sparqlEndpoint: "http://dbpedia.org/sparql/",
   keywordLookupUrl: "http://lookup.dbpedia.org/api/search/KeywordSearch",
+
+  // Seach for DBPedia resources by a given keyword
   searchByKeyword: function(keyword, onSuccess, onFail, limit) {
     $.getJSON(
       this.keywordLookupUrl,
@@ -59,23 +65,7 @@ module.exports = {
     );
   },
 
-  getAbstractByName: function(keyword, onSuccess, onFail) {
-    keyword = keyword.replace(/ /g,"_");
-    var query = [
-       "PREFIX dbpedia: <http://dbpedia.org/resource/>",
-       "SELECT ?name ?abs ?chi",
-       "WHERE {",
-          "<http://dbpedia.org/resource/" + keyword + "> rdfs:label ?name.",
-          "<http://dbpedia.org/resource/" + keyword + "> dbo:abstract ?abs.",
-          "<http://dbpedia.org/resource/" + keyword + "> dbo:abstract ?chi.",
-          "FILTER (langMatches(lang(?name),'en')).",
-          "FILTER (langMatches(lang(?abs),'en')).",
-          "FILTER (langMatches(lang(?chi),'zh')).",
-       "}"
-      ].join(" ");
-    sparqlQueryJson(query, this.sparqlEndpoint, onSuccess, onFail, true);
-  },
-
+  // Fetch properties of a particular type of a resource with given uri
   getPropertiesOfTypeByUri: function(uri, type, onSuccess, onFail) {
     // Get peoperties but NOT relationships
     var query = [
@@ -100,8 +90,8 @@ module.exports = {
     }, onFail, true);
   },
 
+  // Fetch properties and relationships of a resource with given uri
   getPropertiesByUri: function(uri, onSuccess, onFail) {
-    // Get peoperties and relationships
     var query = [
       "SELECT DISTINCT ?relationship ?relationship_label ?property",
       "WHERE {",
@@ -127,19 +117,7 @@ module.exports = {
     }, onFail, true);
   },
 
-  describe: function(resource, onSuccess, onFail) {
-    $.getJSON(
-      this.sparqlEndpoint,
-      {
-        "default-graph-uri": "http://dbpedia.org",
-        "query": "DESCRIBE <" + resource + ">",
-        "output": "application/json"
-      },
-      function(data) { onSuccess(data); },
-      onFail
-    )
-  },
-
+  // Fetch Wikipedia's infobox widget
   getInfobox: function(page, onSuccess, onFail) {
     $.ajax({
       dataType: 'json', // no CORS

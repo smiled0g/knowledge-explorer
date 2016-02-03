@@ -1,4 +1,9 @@
+/*
+ **  Chatbox controller 
+ */
+
 var Console = {
+  // First function to call, to listen to any command from input box
   initQueryInput: function(commands) {
     this.commandsList = Object.keys(commands).map(function(command) {
       var commandRegExp = commandToRegExp(command);
@@ -20,12 +25,14 @@ var Console = {
     }.bind(this));
   },
 
+  // Display user's input on chatbox
   showInput: function(command) {
     var item = $('<div class="input"></div>');
     item.text(command);
     $('#chatbox').prepend(item);
   },
 
+  // Display engine's text response on chatbox
   showResponse: function(response, option) {
     var item = $('<div class="response"></div>');
     item.text(response);
@@ -42,6 +49,7 @@ var Console = {
     $('#chatbox').prepend(item);
   },
 
+  // Display engine's search result on chatbox
   showResultsList: function(results) {
     var item = $('<div class="response"></div>');
     for(var uri in results) {
@@ -58,6 +66,7 @@ var Console = {
     $('#chatbox').prepend(item);
   },
 
+  // Display Wikipedia widget on chatbox
   showInfoboxResponse: function($response, option) {
     var item = $('<div class="response"></div>');
     item.append($response);
@@ -90,6 +99,7 @@ var Console = {
     $('#chatbox').prepend(item);
   },
 
+  // Parse user's input and determine appropriate command to use
   processInput: function(command, commandsList) {
     // try and match recognized text to one of the commands on the list
     for (var j = 0, l = commandsList.length; j < l; j++) {
@@ -111,7 +121,7 @@ var Console = {
 
 }
 
-// Borrowed from Annyang
+// Helper variables, borrowed from Annyang (voice recognition engine)
 var optionalParam = /\s*\((.*?)\)\s*/g;
 var optionalRegex = /(\(\?:[^)]+\))\?/g;
 var namedParam    = /(\(\?)?:\w+/g;

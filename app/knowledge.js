@@ -1,4 +1,10 @@
+/*
+ **  Helper that holds information represented in Knowledge Graph
+ */
+
 var Knowledge = {
+
+  // Initialze an onject that holds graph information
   init: function() {
     window.knowledge_graph =
       {
@@ -38,19 +44,23 @@ var Knowledge = {
       };
   },
 
+  // Return current knowledge graph
   getGraph: function() {
     if(!window.knowledge_graph) this.init();
     return window.knowledge_graph
   },
 
+  // Return name of a node to display in D3 graph
   getNodeName: function(ref, name) {
     return ref + " | " + name;
   },
 
+  // Return resource's uri from that resource's reference number
   getUriFromRef: function(ref) {
     return this.getGraph().refs[ref];
   },
 
+  // Return resource's uri from that resource's name
   getUriFromName: function(name) {
     var graph = this.getGraph().graph;
     for(var uri in graph) {
@@ -59,6 +69,7 @@ var Knowledge = {
     }
   },
 
+  // Return resource's uri from that resource's reference number or name
   getUriFromRefOrName: function(str) {
     if(parseInt(str)) {
       return this.getUriFromRef(parseInt(str));
@@ -67,6 +78,7 @@ var Knowledge = {
     }
   },
 
+  // Add a node to knowledge graph
   addNode: function(uri, name, relationships, redraw) {
     var graph = this.getGraph();
     if(graph.graph[uri]) return;
@@ -104,6 +116,7 @@ var Knowledge = {
     return ref;
   },
 
+  // Remove a node from knowledge graph (not yet implemented)
   removeNode: function(uri, redraw) {
     var graph = this.getGraph();
 
@@ -112,6 +125,7 @@ var Knowledge = {
     }
   },
 
+  // Add relationship to knowledge graph
   addLink: function(uri_from, uri_to, relationship, redraw) {
     var graph = this.getGraph();
 
@@ -130,6 +144,7 @@ var Knowledge = {
     }
   },
 
+  // Remove relationship from knowledge graph
   removeLink: function(uri_from, uri_to, redraw) {
     var graph = this.getGraph();
 
@@ -152,6 +167,7 @@ var Knowledge = {
     }
   },
 
+  // Trigger D3 graph to redraw using current knowledge graph data
   drawGraph: function() {
     $(document).trigger('drawGraph');
   }

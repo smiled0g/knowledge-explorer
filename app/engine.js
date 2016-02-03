@@ -66,9 +66,6 @@ var handleSearchByKeyword = function(keyword) {
           });
         });
       });
-      DBPedia.describe(results[0].uri, function(resource){
-        //console.log(resource);
-      })
     } else {
       showVoiceAndConsoleResponse('I\'m sorry, I couldn\'t find any information with keyword '+keyword);
     }

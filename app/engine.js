@@ -191,6 +191,11 @@ var commands = {
   'Unmute': function() { Voice.unmute(); },
   'Export AIMind *filename': function(filename) {
     AIMind.export(Knowledge.getGraph(), filename);
+    showVoiceAndConsoleResponse('Exported AIMind as ' + filename);
+  },
+  'Import AIMind *filename': function(filename) {
+    AIMind.import(filename);
+    showVoiceAndConsoleResponse('Imported AIMind from ' + filename);
   },
   'Grow *keyword': handleGrow
 };

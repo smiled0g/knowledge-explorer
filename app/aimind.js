@@ -1,15 +1,24 @@
+
+// Import an AIMind XML file
 var Graph = require('./graph'),
     SearchStorage = require('./search-storage')
     fs = require('fs'),
-    pd = require('./pretty-data').pd;
+    pd = require('./pretty-data').pd,
+    xml2js = require('xml2js');
 
-var _import = function() {
-
+var _import = function(filename) {
+	var parser = new xml2js.Parser({ normalizeTags: true });
+	fs.readFile(filename, function(err, data) {
+	    parser.parseString(data, function (err, result) {
+	        console.log(result);
+	    });
+	});
 };
 
+// Export an AIMind XML file
 var _export = function(graph, filename) {
-  var xml = $('<AIMind></AIMind>');
-  xml.append('<Root id="1" />');
+  var xml = $('<aimind></aimind>');
+  xml.append('<root id="1" />');
   Object.keys(graph.graph).map(function(uri){
     var feature = $('<Feature data="'+SearchStorage.get(uri).label+'" id="'+graph.graph[uri].ref+'"></Feature>');
     graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
@@ -21,7 +30,7 @@ var _export = function(graph, filename) {
     });
     graph.graph[uri].depends.map(function(parent_uri){
       feature.append(
-        $('<Parent dest="'+graph.graph[parent_uri].ref+'" relationship="" weight="1" />')
+        $('<parent dest="'+graph.graph[parent_uri].ref+'" relationship="" weight="1" />')
       );
     });
 

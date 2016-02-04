@@ -9,7 +9,8 @@
     "querystring": "^0.2.0",
     "request": "^2.65.0",
     "select2-browserify": "^3.4.5",
-    "wiki-infobox-parser": "^0.1.11"
+    "wiki-infobox-parser": "^0.1.11",
+    "xml2js": "^0.4.16"
   },
   "devDependencies": {
     "electron-prebuilt": "*",

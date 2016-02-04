@@ -72,10 +72,8 @@ module.exports = {
        "WHERE {",
           "<" + uri + "> rdfs:label ?name.",
           "<" + uri + "> dbo:abstract ?abs.",
-          "<" + uri + "> dbo:abstract ?chi.",
           "FILTER (langMatches(lang(?name),'en')).",
           "FILTER (langMatches(lang(?abs),'en')).",
-          "FILTER (langMatches(lang(?chi),'zh')).",
        "}"
       ].join(" ");
     sparqlQueryJson(query, this.sparqlEndpoint, onSuccess, onFail, true);
@@ -154,5 +152,21 @@ module.exports = {
         onSuccess(content);
       }
     });
+  },
+
+  // Helper to format abstract, removing references and sentences in parenthesis
+  getFormattedDescription: function(text) {
+    return text
+            .replace(/\[.*\d.*\]/g,'')
+            .replace(/\(.*\)/g,'');
+  },
+
+  // Helper to get first sentence from abstract (description)
+  getFirstSentence: function(text) {
+    if(text.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)) {
+      return text.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)[1];
+    }
+    return text;
   }
+
 }

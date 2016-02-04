@@ -11,8 +11,10 @@ var Knowledge = {
         "config": {
           "title" : "Knowledge Graph",
           "graph" : {
-              "linkDistance" : 150,
-              "charge"       : -400,
+              "linkDistance" : 125,
+              "charge"       : -5000,
+              "friction"     : 0.7,
+              "gravity"      : 0.2,
               "height"       : 800,
               "numColors"    : 12,
               "labelPadding" : {

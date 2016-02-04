@@ -30,15 +30,8 @@ var handleSearchByKeyword = function(keyword) {
     console.log(results);
     if(results.length > 0) {
       // Speak first sentence of the description
-      var formatted_description =
-        results[0].description
-          .replace(/\[.*\d.*\]/g,'')
-          .replace(/\(.*\)/g,'');
-
-      var first_sentence = formatted_description;
-      if(formatted_description.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)) {
-        first_sentence = formatted_description.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)[1];
-      }
+      var formatted_description = DBPedia.getFormattedDescription(results[0].description)
+      var first_sentence = DBPedia.getFirstSentence(formatted_description);
 
       DBPedia.getInfobox(results[0].uri.split('/').pop().trim(), function(data){
         var infobox = $('<div>'+data.replace(/\/\//g, 'https://')+'</div>').children('.infobox');
@@ -112,40 +105,80 @@ var handleSeachByOntology = function(keyword, ontology) {
   });
 }
 
-var handleGrow = function(keyword) {
+// Use BFS to grow the graph from certain node
+var handleGrow = function(keyword, limit) {
   keyword = keyword.replace(/\W/g, '')
 
-  var root_uri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
-      growQueue = [root_uri],
-      amountToGrow = 50;
+  var rootUri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
+      growQueue = [rootUri],
+      addedUri = {},
+      amountToGrow = limit || 50;
 
-  while(growQueue.length > 0 && amountToGrow > 0) {
-    var uri = growQueue.shift();
-    console.log(uri);
-    if(Knowledge.getGraph().graph[uri] && uri!=root_uri) continue;
+  // Add initial relationships from uri to queue
+  var addRelationshipsToQueue = function(uri) {
+    // Loop through all relationship and add to queue if they're not already added
     Object.keys(SearchStorage.get(uri).relationships).map(function(neighbor_uri){
-      console.log(neighbor_uri);
-      if(!SearchStorage.get(neighbor_uri)) {
-        DBPedia.getAbstractByUri(neighbor_uri, function(abstract_result){
-          DBPedia.getPropertiesByUri(neighbor_uri, function(relationships){
-            var abstract = abstract_result.results.bindings[0].abs.value;
-            var label = abstract_result.results.bindings[0].name.value;
-            SearchStorage.add({
-              uri: neighbor_uri,
-              label: label,
-              description: abstract,
-              speak: abstract,
-              relationships: relationships
-            });
-            if(handleAddResourceToGraph(neighbor_uri)) amountToGrow--;
-            growQueue.push(neighbor_uri);
-          });
-        });
-      } else {
-        if(handleAddResourceToGraph(neighbor_uri)) amountToGrow--;
+      // Avoid adding same resource twice
+      if(!addedUri[neighbor_uri]) {
+        addedUri[neighbor_uri] = true;
+        growQueue.push(neighbor_uri);
       }
     });
   }
+
+  var processNextUriOnQueue = function() {
+    if(amountToGrow === 0 || growQueue.length === 0) return;
+
+    // Get first URI on the queue
+    var uri = growQueue.shift();
+
+    // DEBUG
+    // console.log(uri);
+
+    // If the resource is currently in the graph, skip it
+    if(Knowledge.getGraph().graph[uri]) {
+      processNextUriOnQueue();
+      return;
+    }
+
+    amountToGrow--;
+
+    // Add resource to graph, if it's been searched before, within fetching new data
+    //   otherwise, fetch the resource data and add to graph
+    if(SearchStorage.get(uri)) {
+      handleAddResourceToGraph(uri);
+      addRelationshipsToQueue(uri);
+      processNextUriOnQueue();
+    } else {
+      DBPedia.getAbstractByUri(uri, function(abstract_result){
+        // If abstract not found on the uri, move on
+        if(abstract_result.results.bindings.length === 0)  {
+          processNextUriOnQueue();
+        } else {
+          DBPedia.getPropertiesByUri(uri, function(relationships){
+            console.log(uri, abstract_result);
+            var abstract = abstract_result.results.bindings[0].abs.value,
+                label = abstract_result.results.bindings[0].name.value,
+                formatted_description = DBPedia.getFormattedDescription(abstract),
+                first_sentence = DBPedia.getFirstSentence(formatted_description);
+            SearchStorage.add({
+              uri: uri,
+              label: label,
+              description: formatted_description,
+              speak: first_sentence,
+              relationships: relationships
+            });
+            handleAddResourceToGraph(uri);
+            addRelationshipsToQueue(uri);
+            processNextUriOnQueue();
+          });
+        }
+      });
+    }
+  }
+
+  addRelationshipsToQueue(rootUri);
+  processNextUriOnQueue();
 }
 
 var handleLink = function(r1, r2) {
@@ -189,10 +222,10 @@ var commands = {
   },
   'Mute': function() { Voice.mute(); },
   'Unmute': function() { Voice.unmute(); },
-  'Export AIMind *filename': function(filename) {
+  'Export AIMind to *filename': function(filename) {
     AIMind.export(Knowledge.getGraph(), filename);
   },
-  'Grow *keyword': handleGrow
+  'Grow *keyword (for *limit)': handleGrow
 };
 
 

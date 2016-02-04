@@ -151,6 +151,8 @@ module.exports = function(data) {
             .size([graph.width, graph.height])
             .linkDistance(config.graph.linkDistance)
             .charge(config.graph.charge)
+            .gravity(config.graph.gravity)
+            .friction(config.graph.friction)
             .on('tick', tick);
 
         graph.svg = d3.select('#graph').append('svg')
@@ -442,6 +444,10 @@ module.exports = function(data) {
         var quadtree = d3.geom.quadtree(graph.nodeValues);
 
         for (var name in graph.data) {
+            if(!graph.data[name].extent) {
+                console.log('Graph error:', name, graph.data[name]);
+                continue;
+            }
             var obj = graph.data[name],
                 ox1 = obj.x + obj.extent.left,
                 ox2 = obj.x + obj.extent.right,
@@ -519,6 +525,8 @@ module.exports = function(data) {
                     this.parentNode.insertBefore(this, this);
                 }
 
+                if(d.source.x === d.target.x && d.source.y === d.target.y) return;
+
                 var x    = d.target.x,
                     y    = d.target.y,
                     line = new geo.LineSegment(d.source.x, d.source.y, x, y);
@@ -539,7 +547,8 @@ module.exports = function(data) {
 
         graph.node
             .attr('transform', function(d) {
-                return 'translate(' + d.x + ',' + d.y + ')';
+                if(d.x && d.y) return 'translate(' + d.x + ',' + d.y + ')';
+                return '';
             });
     }
 

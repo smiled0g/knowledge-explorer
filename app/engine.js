@@ -112,7 +112,7 @@ var handleGrow = function(keyword, limit) {
   var rootUri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
       growQueue = [rootUri],
       addedUri = {},
-      amountToGrow = limit || 50;
+      amountToGrow = limit || 10;
 
   // Add initial relationships from uri to queue
   var addRelationshipsToQueue = function(uri) {
@@ -222,9 +222,9 @@ var commands = {
   },
   'Mute': function() { Voice.mute(); },
   'Unmute': function() { Voice.unmute(); },
-  'Export AIMind to *filename': function(filename) {
+  'Export AIMind *filename': function(filename) {
     AIMind.export(Knowledge.getGraph(), filename);
-    showVoiceAndConsoleResponse('Exported AIMind as ' + filename);
+    showVoiceAndConsoleResponse('Exported AIMind to ' + filename);
   },
   'Import AIMind *filename': function(filename) {
     AIMind.import(filename);
@@ -237,5 +237,5 @@ var commands = {
 
 module.exports = {
   run: run,
-  commands: commands
+  commands: commands,
 }

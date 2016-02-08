@@ -20,6 +20,14 @@ var handleAddResourceToGraph = function(uri) {
   );
 }
 
+var escapeXMLcharacters = function(string) {
+  return string.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&apos;');
+}
+
 
 var importByURI = function(uri) {
   // If the resource is currently in the graph, skip it
@@ -90,7 +98,7 @@ var _export = function(graph, filename) {
       );
     });
 
-    feature.append($('<Speak value="'+SearchStorage.get(uri).speak+'" />'));
+    feature.append($('<Speak value="'+escapeXMLcharacters(SearchStorage.get(uri).speak)+'" />'));
     
     xml.append(feature);
   });

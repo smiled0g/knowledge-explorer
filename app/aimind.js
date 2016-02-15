@@ -20,15 +20,6 @@ var handleAddResourceToGraph = function(uri) {
   );
 }
 
-var escapeXMLcharacters = function(string) {
-  return string.replace(/&/g, '&amp;')
-               .replace(/</g, '&lt;')
-               .replace(/>/g, '&gt;')
-               .replace(/"/g, '&quot;')
-               .replace(/'/g, '&apos;');
-}
-
-
 var importByURI = function(uri) {
   // If the resource is currently in the graph, skip it
   if(Knowledge.getGraph().graph[uri]) {
@@ -81,35 +72,55 @@ var _import = function(filename) {
 
 // Export an AIMind XML file
 var _export = function(graph, filename) {
-  var xml = $('<aimind></aimind>');
-  xml.append('<root id="1" />');
+  var builder = new xml2js.Builder( {rootName: "AIMind"} );
+
+  // Create a JSON object
+  var features = {
+    // Add root node
+    feature: {
+      info: {$: {data: 'root', id: "0", uri: ""}},
+      neighbor: {$: {dest: '', relationship: '', weight: "0"}},
+      parent: {$: {dest: '', relationship: '', weight: "1"}},
+      speak: ''
+    }
+  };
+  
   Object.keys(graph.graph).map(function(uri){
-    var feature = $('<feature data="'+SearchStorage.get(uri).label+'" id="'+graph.graph[uri].ref+'" uri="'+uri+'"></feature>');
+
+    // Add a new feature into JSON object
+    features.feature[SearchStorage.get(uri).label].info.$.data = graph.graph[uri].ref;
+    features.feature[SearchStorage.get(uri).label].info.$.id = SearchStorage.get(uri).label;
+    features.feature[SearchStorage.get(uri).label].info.$.uri = uri;
+
     graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
       if(!graph.graph[uri].depends[neighbor_uri]) {
-        feature.append(
-          $('<neighbor dest="'+graph.graph[neighbor_uri].ref+'" relationship="" weight="0" />')
-        );
+        features.feature[SearchStorage.get(uri).label].neighbor.$.dest = graph.graph[neighbor_uri].ref;
+        features.feature[SearchStorage.get(uri).label].neighbor.$.relationship = relationship;
       }
     });
+
     graph.graph[uri].depends.map(function(parent_uri){
-      feature.append(
-        $('<parent dest="'+graph.graph[parent_uri].ref+'" relationship="" weight="1" />')
-      );
+      features.feature[SearchStorage.get(uri).label].parent.$.dest = graph.graph[parent_uri].ref;
+      features.feature[SearchStorage.get(uri).label].parent.$.relationship = relationship;
     });
 
-    feature.append($('<Speak value="'+escapeXMLcharacters(SearchStorage.get(uri).speak)+'" />'));
-    
-    xml.append(feature);
-  });
+    features.feature[SearchStorage.get(uri).label].speak = SearchStorage.get(uri).speak;
 
-  fs.writeFile(filename, pd.xml(xml[0].outerHTML), function(err) {
+  });
+  
+  console.log(features);
+  // Build features JSON object into XML
+  var xml = builder.buildObject(features);
+
+  // Write to file
+  fs.writeFile(filename, pd.xml(xml), function(err) {
       if(err) {
           return console.log(err);
       }
       // Space for console response
   });
-  console.log(xml);
+  console.log(filename);
+
 };
 
 module.exports = {

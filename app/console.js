@@ -1,5 +1,5 @@
 /*
- **  Chatbox controller 
+ **  Chatbox controller
  */
 
 var Console = {
@@ -64,6 +64,24 @@ var Console = {
       item.append($r);
     }
     $('#chatbox').prepend(item);
+  },
+
+
+  // Display grow progress on chatbox
+  showGrowResponse: function(addListener) {
+    var item = $('<div class="response"></div>');
+    var msg = $('<div>Please wait while growing is in progress</div>').appendTo(item);
+    var progress = $('<div class="progress"><span class="amount"></span><div class="bar"></div></div>').appendTo(item);
+    // function that watch progress, which takes 1 argument: percentage of the progress
+    var progressListener = function(percent) {
+      if(percent === 100) {
+        msg.text('Grow done!');
+      }
+      progress.find('.amount').text(Math.floor(percent)+'%');
+      progress.find('.bar').width(Math.floor(percent)+'%');
+    }
+    $('#chatbox').prepend(item);
+    addListener(progressListener);
   },
 
   // Display Wikipedia widget on chatbox

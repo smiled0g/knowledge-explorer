@@ -116,6 +116,25 @@ p, ul, li {
   top: 5px;
 }
 
+.response .progress {
+  position: relative;
+  border: solid 1px;
+  border-radius: 5px;
+  line-height: 24px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.response .progress .bar {
+  border-radius: 5px;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: rgba(231, 76, 60, 0.3);
+  transition: width 300ms;
+}
+
 .infobox th[scope="row"] {
   text-align: right;
   padding-right: 10px;

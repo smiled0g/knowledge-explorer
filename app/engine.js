@@ -78,15 +78,14 @@ var handleAddLastSearchResultToGraph = function() {
   );
 }
 
-var handleAddResourceToGraph = function(uri) {
-  console.log(uri);
+var handleAddResourceToGraph = function(uri, redraw) {
   var searchResult = SearchStorage.get(uri);
 
   return Knowledge.addNode(
     searchResult.uri,
     searchResult.label,
     searchResult.relationships,
-    true
+    typeof redraw === 'undefined' ? true : redraw
   );
 }
 
@@ -112,7 +111,8 @@ var handleGrow = function(keyword, limit) {
   var rootUri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
       growQueue = [rootUri],
       addedUri = {},
-      amountToGrow = limit || 10;
+      limit = limit || 10;
+      amountToGrow = limit;
 
   // Add initial relationships from uri to queue
   var addRelationshipsToQueue = function(uri) {
@@ -126,8 +126,19 @@ var handleGrow = function(keyword, limit) {
     });
   }
 
+  var onProgress = function() {}
+  var onFinish = function() {
+    Knowledge.drawGraph();
+    onProgress(100);
+  }
+
   var processNextUriOnQueue = function() {
-    if(amountToGrow === 0 || growQueue.length === 0) return;
+    if(amountToGrow === 0 || growQueue.length === 0) {
+      onFinish();
+      return;
+    }
+
+    onProgress((limit-amountToGrow)*100.0/limit);
 
     // Get first URI on the queue
     var uri = growQueue.shift();
@@ -146,7 +157,7 @@ var handleGrow = function(keyword, limit) {
     // Add resource to graph, if it's been searched before, within fetching new data
     //   otherwise, fetch the resource data and add to graph
     if(SearchStorage.get(uri)) {
-      handleAddResourceToGraph(uri);
+      handleAddResourceToGraph(uri, false);
       addRelationshipsToQueue(uri);
       processNextUriOnQueue();
     } else {
@@ -168,7 +179,7 @@ var handleGrow = function(keyword, limit) {
               speak: first_sentence,
               relationships: relationships
             });
-            handleAddResourceToGraph(uri);
+            handleAddResourceToGraph(uri, false);
             addRelationshipsToQueue(uri);
             processNextUriOnQueue();
           });
@@ -179,6 +190,10 @@ var handleGrow = function(keyword, limit) {
 
   addRelationshipsToQueue(rootUri);
   processNextUriOnQueue();
+
+  Console.showGrowResponse(function(progressListener){
+    onProgress = progressListener;
+  });
 }
 
 var handleLink = function(r1, r2) {

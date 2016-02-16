@@ -85,7 +85,7 @@ var _export = function(graph, filename) {
       $: {data: 'root', id: '0', uri: ''},
       neighbor: {$: {dest: '', relationship: '', weight: '0'}},
       parent: {$: {dest: '', relationship: '', weight: '1'}},
-      speak: ''
+      speak: {$: {value: ''}}
     };
 
     // Add a new feature into JSON object
@@ -105,7 +105,7 @@ var _export = function(graph, filename) {
       feature.parent.$.relationship = '';
     });
 
-    feature.speak = SearchStorage.get(uri).speak;
+    feature.speak.$.value = SearchStorage.get(uri).speak;
 
     aimind.feature.push(feature);
 

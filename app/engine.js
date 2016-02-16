@@ -188,12 +188,12 @@ var handleGrow = function(keyword, limit) {
     }
   }
 
-  addRelationshipsToQueue(rootUri);
-  processNextUriOnQueue();
-
   Console.showGrowResponse(function(progressListener){
     onProgress = progressListener;
   });
+
+  addRelationshipsToQueue(rootUri);
+  processNextUriOnQueue();
 }
 
 var handleLink = function(r1, r2) {

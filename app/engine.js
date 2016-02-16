@@ -32,6 +32,8 @@ var handleSearchByKeyword = function(keyword) {
       // Speak first sentence of the description
       var formatted_description = DBPedia.getFormattedDescription(results[0].description)
       var first_sentence = DBPedia.getFirstSentence(formatted_description);
+      var formatted_description_chi = DBPedia.getFormattedDescription(results[0].description)
+      var first_sentence_chi = DBPedia.getFirstSentence(formatted_description);
 
       DBPedia.getInfobox(results[0].uri.split('/').pop().trim(), function(data){
         var infobox = $('<div>'+data.replace(/\/\//g, 'https://')+'</div>').children('.infobox');
@@ -40,7 +42,7 @@ var handleSearchByKeyword = function(keyword) {
           showConsoleInfoboxResponse(infobox, {
             add: {
               uri: results[0].uri,
-              name: results[0].label
+              name: results[0].label,
             }
           });
         } else {
@@ -55,8 +57,11 @@ var handleSearchByKeyword = function(keyword) {
           SearchStorage.add({
             uri: results[0].uri,
             label: results[0].label,
+            label_chi: results[0].label_chi,
             description: formatted_description,
+            description_chi: formatted_description_chi,
             speak: first_sentence,
+            speak_chi: first_sentence_chi,
             relationships: relationships
           });
         });
@@ -170,13 +175,20 @@ var handleGrow = function(keyword, limit) {
             console.log(uri, abstract_result);
             var abstract = abstract_result.results.bindings[0].abs.value,
                 label = abstract_result.results.bindings[0].name.value,
+                abstract_chi = abstract_result.results.bindings[0].absChi.value,
+                label_chi = abstract_result.results.bindings[0].nameChi.value,
                 formatted_description = DBPedia.getFormattedDescription(abstract),
-                first_sentence = DBPedia.getFirstSentence(formatted_description);
+                first_sentence = DBPedia.getFirstSentence(formatted_description),
+                formatted_description_chi = DBPedia.getFormattedDescription(abstract_chi),
+                first_sentence_chi = DBPedia.getFirstSentence(formatted_description_chi);
             SearchStorage.add({
               uri: uri,
               label: label,
+              label_chi: label_chi,
               description: formatted_description,
+              description_chi: formatted_description_chi,
               speak: first_sentence,
+              speak_chi: first_sentence_chi,
               relationships: relationships
             });
             handleAddResourceToGraph(uri, false);

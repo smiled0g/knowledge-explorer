@@ -8,23 +8,15 @@ module.exports = function(data) {
     var graph       = { data: data.graph },
         config      = data.config,
         selected    = {},
+        hovered     = null,
         highlighted = null,
-        isIE        = false;
+        isIE        = false,
+        container   = '#graph';
 
     function run() {
         resize();
 
         drawGraph();
-
-        // d3.json(config.jsonUrl, function(data) {
-        //     if (data.errors.length) {
-        //         alert('Data error(s):\n\n' + data.errors.join('\n'));
-        //         return;
-        //     }
-        //
-        //     graph.data = data.data;
-        //     drawGraph();
-        // });
 
         $('#docs-close').on('click', function() {
             deselectObject();
@@ -66,7 +58,6 @@ module.exports = function(data) {
 
         for (var name in graph.data) {
             var obj = graph.data[name];
-            console.log(name);
             obj.positionConstraints = [];
             obj.linkStrength        = 1;
 
@@ -158,6 +149,10 @@ module.exports = function(data) {
         graph.svg = d3.select('#graph').append('svg')
             .attr('width' , graph.width  + graph.margin.left + graph.margin.right)
             .attr('height', graph.height + graph.margin.top  + graph.margin.bottom)
+            .call(d3.behavior.zoom().on("zoom", function () {
+              if(hovered) return;
+              d3.select('#graph > svg > g').attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+            }))
           .append('g')
             .attr('transform', 'translate(' + graph.margin.left + ',' + graph.margin.top + ')');
 
@@ -199,54 +194,6 @@ module.exports = function(data) {
             .data(['coloredBlur', 'SourceGraphic'])
           .enter().append('feMergeNode')
             .attr('in', String);
-
-        // graph.legend = graph.svg.append('g')
-        //     .attr('class', 'legend')
-        //     .attr('x', 0)
-        //     .attr('y', 0)
-        //   .selectAll('.category')
-        //     .data(d3.values(graph.categories))
-        //   .enter().append('g')
-        //     .attr('class', 'category');
-        //
-        // graph.legendConfig = {
-        //     rectWidth   : 12,
-        //     rectHeight  : 12,
-        //     xOffset     : -10,
-        //     yOffset     : 30,
-        //     xOffsetText : 20,
-        //     yOffsetText : 10,
-        //     lineHeight  : 15
-        // };
-        // graph.legendConfig.xOffsetText += graph.legendConfig.xOffset;
-        // graph.legendConfig.yOffsetText += graph.legendConfig.yOffset;
-        //
-        // graph.legend.append('rect')
-        //     .attr('x', graph.legendConfig.xOffset)
-        //     .attr('y', function(d, i) {
-        //         return graph.legendConfig.yOffset + i * graph.legendConfig.lineHeight;
-        //     })
-        //     .attr('height', graph.legendConfig.rectHeight)
-        //     .attr('width' , graph.legendConfig.rectWidth)
-        //     .attr('fill'  , function(d) {
-        //         return graph.fillColor(d.key);
-        //     })
-        //     .attr('stroke', function(d) {
-        //         return graph.strokeColor(d.key);
-        //     });
-        //
-        // graph.legend.append('text')
-        //     .attr('x', graph.legendConfig.xOffsetText)
-        //     .attr('y', function(d, i) {
-        //         return graph.legendConfig.yOffsetText + i * graph.legendConfig.lineHeight;
-        //     })
-        //     .text(function(d) {
-        //         return d.typeName + (d.group ? ': ' + d.group : '');
-        //     });
-
-        $('#graph-container').on('scroll', function() {
-            graph.legend.attr('transform', 'translate(0,' + $(this).scrollTop() + ')');
-        });
 
         graph.line = graph.svg.append('g').selectAll('.link')
             .data(graph.force.links())
@@ -309,6 +256,7 @@ module.exports = function(data) {
                         clearTimeout(graph.mouseoutTimeout);
                         graph.mouseoutTimeout = null;
                     }
+                    hovered = d;
                     highlightObject(d);
                 }
             })
@@ -319,6 +267,7 @@ module.exports = function(data) {
                         graph.mouseoutTimeout = null;
                     }
                     graph.mouseoutTimeout = setTimeout(function() {
+                        hovered = null;
                         highlightObject(null);
                     }, 300);
                 }
@@ -415,6 +364,10 @@ module.exports = function(data) {
                 graph.force.tick();
             }
             graph.preventCollisions = true;
+            // force tick to prevent animation
+            for (var k=0;(graph.force.alpha() > 1e-2) && (k < 150); k++) {
+                graph.force.tick();
+            }
             $('#graph-container').css('visibility', 'visible');
         });
     }

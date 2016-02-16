@@ -72,45 +72,48 @@ var _import = function(filename) {
 
 // Export an AIMind XML file
 var _export = function(graph, filename) {
-  var builder = new xml2js.Builder( {rootName: "AIMind"} );
+  var builder = new xml2js.Builder( {rootName: "aimind"} );
 
-  // Create a JSON object
-  var features = {
-    // Add root node
-    feature: {
-      info: {$: {data: 'root', id: "0", uri: ""}},
-      neighbor: {$: {dest: '', relationship: '', weight: "0"}},
-      parent: {$: {dest: '', relationship: '', weight: "1"}},
-      speak: ''
-    }
+  var aimind = {
+    root: {$: {id: '0'}},
+    feature: []
   };
   
   Object.keys(graph.graph).map(function(uri){
 
+    var feature = {
+      $: {data: 'root', id: '0', uri: ''},
+      neighbor: {$: {dest: '', relationship: '', weight: '0'}},
+      parent: {$: {dest: '', relationship: '', weight: '1'}},
+      speak: ''
+    };
+
     // Add a new feature into JSON object
-    features.feature[SearchStorage.get(uri).label].info.$.data = graph.graph[uri].ref;
-    features.feature[SearchStorage.get(uri).label].info.$.id = SearchStorage.get(uri).label;
-    features.feature[SearchStorage.get(uri).label].info.$.uri = uri;
+    feature.$.data = graph.graph[uri].ref;
+    feature.$.id = SearchStorage.get(uri).label;
+    feature.$.uri = uri;
 
     graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
       if(!graph.graph[uri].depends[neighbor_uri]) {
-        features.feature[SearchStorage.get(uri).label].neighbor.$.dest = graph.graph[neighbor_uri].ref;
-        features.feature[SearchStorage.get(uri).label].neighbor.$.relationship = relationship;
+        feature.neighbor.$.dest = graph.graph[neighbor_uri].ref;
+        feature.neighbor.$.relationship = '';
       }
     });
 
     graph.graph[uri].depends.map(function(parent_uri){
-      features.feature[SearchStorage.get(uri).label].parent.$.dest = graph.graph[parent_uri].ref;
-      features.feature[SearchStorage.get(uri).label].parent.$.relationship = relationship;
+      feature.parent.$.dest = graph.graph[parent_uri].ref;
+      feature.parent.$.relationship = '';
     });
 
-    features.feature[SearchStorage.get(uri).label].speak = SearchStorage.get(uri).speak;
+    feature.speak = SearchStorage.get(uri).speak;
+
+    aimind.feature.push(feature);
 
   });
   
-  console.log(features);
+  console.log(aimind);
   // Build features JSON object into XML
-  var xml = builder.buildObject(features);
+  var xml = builder.buildObject(aimind);
 
   // Write to file
   fs.writeFile(filename, pd.xml(xml), function(err) {

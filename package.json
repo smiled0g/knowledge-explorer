@@ -13,6 +13,7 @@
     "xml2js": "^0.4.16"
   },
   "devDependencies": {
+    "electron-packager": "^5.2.1",
     "electron-prebuilt": "*",
     "electron-rebuild": "*"
   }

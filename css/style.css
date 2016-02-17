@@ -105,6 +105,7 @@ p, ul, li {
   border: solid 1px #E74C3C;
   color: #E74C3C;
   margin-left: 30px;
+  word-break: break-word;
 }
 
 .response::before {
@@ -140,6 +141,7 @@ p, ul, li {
   padding-right: 10px;
   font-size: 12px;
   vertical-align: top;
+  word-break: normal;
 }
 
 .infobox th a {

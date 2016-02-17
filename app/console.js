@@ -68,14 +68,14 @@ var Console = {
 
 
   // Display grow progress on chatbox
-  showGrowResponse: function(addListener) {
+  showProgressResponse: function(initialMessage, successMessage, addListener) {
     var item = $('<div class="response"></div>');
-    var msg = $('<div>Please wait while growing is in progress</div>').appendTo(item);
+    var msg = $('<div></div>').text(initialMessage).appendTo(item);
     var progress = $('<div class="progress"><span class="amount"></span><div class="bar"></div></div>').appendTo(item);
     // function that watch progress, which takes 1 argument: percentage of the progress
     var progressListener = function(percent) {
       if(percent === 100) {
-        msg.text('Grow done!');
+        msg.text(successMessage);
       }
       progress.find('.amount').text(Math.floor(percent)+'%');
       progress.find('.bar').width(Math.floor(percent)+'%');

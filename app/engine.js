@@ -226,6 +226,14 @@ var handleUnlink = function(r1, r2) {
   }
 }
 
+var handleGraphNodeSelect = function(event) {
+  var ref = event.detail;
+  var uri = Knowledge.getUriFromRef(ref);
+  var node = SearchStorage.get(uri);
+  Console.showNodeInfo(node.description);
+}
+document.addEventListener('graphNodeSelect', handleGraphNodeSelect);
+
 var commands = {
   '(hi) (hello) jimmy': function() {
     showVoiceAndConsoleResponse('I\'m here!');

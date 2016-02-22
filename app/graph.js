@@ -1,3 +1,5 @@
+var Console = require('./console');
+
 /*
  **  Graph controller
  */
@@ -528,6 +530,8 @@ module.exports = function(data) {
             obj : obj,
             el  : el
         };
+
+        document.dispatchEvent(new CustomEvent("graphNodeSelect", { "detail": obj.ref }));
 
         highlightObject(obj);
 

@@ -62,7 +62,7 @@ var importFeatureWithURI = function(feature, counter) {
 
 var importFeatureWithoutURI = function(feature, relationships, counter) {
   var uri = '#'+feature.$.data;
-
+  
   SearchStorage.add({
     uri: uri,
     label: feature.$.data,
@@ -162,8 +162,8 @@ var _export = function(callback) {
     };
 
     // Add a new feature into JSON object
-    feature.$.data = graph.graph[uri].ref;
-    feature.$.id = SearchStorage.get(uri).label;
+    feature.$.data = SearchStorage.get(uri).label;
+    feature.$.id = graph.graph[uri].ref;
     feature.$.uri = uri;
 
     feature.speak = SearchStorage.get(uri).speak;

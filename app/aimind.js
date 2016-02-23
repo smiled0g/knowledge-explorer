@@ -1,26 +1,28 @@
-
 var Graph = require('./graph'),
     SearchStorage = require('./search-storage'),
     Knowledge = require('./knowledge'),
     DBPedia = require('./dbpedia'),
+    Console = require('./console'),
     fs = require('fs'),
     pd = require('./pretty-data').pd,
-    xml2js = require('xml2js');
+    xml2js = require('xml2js'),
+    dialog = require('electron').remote.dialog;
 
 
 var handleAddResourceToGraph = function(uri) {
-  console.log(uri);
   var searchResult = SearchStorage.get(uri);
 
   return Knowledge.addNode(
     searchResult.uri,
     searchResult.label,
     searchResult.relationships,
-    true
+    false
   );
 }
 
-var importByURI = function(uri) {
+var importFeatureWithURI = function(feature, counter) {
+  var uri = feature.$.uri;
+
   // If the resource is currently in the graph, skip it
   if(Knowledge.getGraph().graph[uri]) {
     return;
@@ -50,6 +52,7 @@ var importByURI = function(uri) {
             relationships: relationships
           });
           handleAddResourceToGraph(uri);
+          counter();
         });
       }
     });
@@ -57,30 +60,101 @@ var importByURI = function(uri) {
 }
 
 
-// Import an AIMind XML file
-var _import = function(filename) {
-  var parser = new xml2js.Parser({ normalizeTags: true });
-  fs.readFile(filename, function(err, data) {
-      parser.parseString(data, function (err, result) {
-          result.aimind.feature.map(function(feature) {
-            importByURI(feature.$.uri);
-          });
-      });
+var importFeatureWithoutURI = function(feature, relationships, counter) {
+  var uri = '#'+feature.$.data;
+  
+  SearchStorage.add({
+    uri: uri,
+    label: feature.$.data,
+    description: feature.speak,
+    speak: feature.speak,
+    relationships: relationships
   });
+  handleAddResourceToGraph(uri);
+  counter();
+}
+
+
+// Import an AIMind XML file
+var _import = function() {
+  var FeatureMapping = {}; // Temporary mapping from $.data -> DBPedia's URI
+
+
+  dialog.showOpenDialog(
+    { title: 'Import from AIMind XML', properties: ['openFile'] },
+    function(path) {
+      var parser = new xml2js.Parser({ normalizeTags: false });
+      fs.readFile(path[0], function(err, data) {
+        parser.parseString(data, function (err, result) {
+          // Define counter that counts for how many feature has been imported
+          var nFeatures = result.AIMind.Features[0].Feature.length,
+              remaining = nFeatures;
+
+          var counter = function() {
+            remaining--;
+            if(remaining === 0) {
+              // Import done
+              // Render graph
+              Knowledge.drawGraph();
+            }
+            onProgress((nFeatures-remaining)*100.0/nFeatures);
+          }
+
+          var onProgress = function(){};
+          Console.showProgressResponse(
+            'Please wait while graph is being imported',
+            'Import done!',
+            function(progressListener){
+              // Assign function to call on progress
+              onProgress = progressListener;
+            }
+          );
+
+          // Create mapping between id and uri
+          var idToUriMap = {};
+          result.AIMind.Features[0].Feature.map(function(feature) {
+            var uri = feature.$.uri || ('#'+feature.$.data);
+            idToUriMap[feature.$.id] = uri;
+          });
+
+          // Import each feature
+          result.AIMind.Features[0].Feature.map(function(feature) {
+            if(feature.$.uri && feature.$.uri.indexOf('#') != 0) {
+              importFeatureWithURI(feature, counter);
+            } else {
+              // Handle xml created manually
+
+              // Create list of relationships
+              var relationships = {};
+              if(feature.neighbors.length > 0 && feature.neighbors[0].neighbor) {
+                feature.neighbors[0].neighbor.map(function(neighbor) {
+                  var relationship = {};
+                  relationship[neighbor.$.relationship] = '#'+neighbor.$.relationship;
+                  relationships[idToUriMap[neighbor.$.dest]] = relationship;
+                })
+              }
+
+              importFeatureWithoutURI(feature, relationships, counter);
+            }
+          });
+        });
+      });
+    }
+  );
 }
 
 
 // Export an AIMind XML file
-var _export = function(graph, filename) {
-  var builder = new xml2js.Builder( {rootName: "aimind"} );
+var _export = function(callback) {
+  var builder = new xml2js.Builder( {rootName: "AIMind"} ),
+      graph = Knowledge.getGraph();
 
   var aimind = {
-    root: {$: {id: '0'}},
-    feature: []
+    Root: {$: {id: '0'}},
+    Features: { Feature: [] }
   };
-  
-  Object.keys(graph.graph).map(function(uri){
 
+  Object.keys(graph.graph).map(function(uri){
     var feature = {
       $: {data: 'root', id: '0', uri: ''},
       neighbor: {$: {dest: '', relationship: '', weight: '0'}},
@@ -89,8 +163,8 @@ var _export = function(graph, filename) {
     };
 
     // Add a new feature into JSON object
-    feature.$.data = graph.graph[uri].ref;
-    feature.$.id = SearchStorage.get(uri).label;
+    feature.$.data = SearchStorage.get(uri).label;
+    feature.$.id = graph.graph[uri].ref;
     feature.$.uri = uri;
 
     graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
@@ -107,23 +181,31 @@ var _export = function(graph, filename) {
 
     feature.speak.$.value = SearchStorage.get(uri).speak;
 
-    aimind.feature.push(feature);
+    graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
+      var neighbor = {$: {dest: '', relationship: '', weight: '0'}}
+      neighbor.$.dest = graph.graph[neighbor_uri].ref;
+      neighbor.$.relationship = Object.keys(SearchStorage.get(uri).relationships[neighbor_uri])[0];
+      feature.neighbors.neighbor.push(neighbor);
+    });
 
+    aimind.Features.Feature.push(feature);
   });
-  
-  console.log(aimind);
+
   // Build features JSON object into XML
   var xml = builder.buildObject(aimind);
 
-  // Write to file
-  fs.writeFile(filename, pd.xml(xml), function(err) {
-      if(err) {
-          return console.log(err);
-      }
-      // Space for console response
-  });
-  console.log(filename);
-
+  dialog.showSaveDialog(
+    { title: 'Export to AIMind XML' },
+    function(path) {
+      // Write to file
+      fs.writeFile(path, pd.xml(xml), function(err) {
+          if(err) {
+              return console.log(err);
+          }
+          callback(path);
+      });
+    }
+  );
 };
 
 module.exports = {

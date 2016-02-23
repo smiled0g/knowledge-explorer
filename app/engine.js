@@ -200,12 +200,16 @@ var handleGrow = function(keyword, limit) {
     }
   }
 
+  Console.showProgressResponse(
+    'Please wait while growing is in progress',
+    'Growing done!',
+    function(progressListener){
+      onProgress = progressListener;
+    }
+  );
+
   addRelationshipsToQueue(rootUri);
   processNextUriOnQueue();
-
-  Console.showGrowResponse(function(progressListener){
-    onProgress = progressListener;
-  });
 }
 
 var handleLink = function(r1, r2) {
@@ -257,13 +261,15 @@ var commands = {
   },
   'Mute': function() { Voice.mute(); },
   'Unmute': function() { Voice.unmute(); },
-  'Export AIMind *filename': function(filename) {
-    AIMind.export(Knowledge.getGraph(), filename);
-    showVoiceAndConsoleResponse('Exported AIMind to ' + filename);
+  'Export AIMind': function() {
+    AIMind.export(function(path) {
+      showVoiceAndConsoleResponse('Exported AIMind to ' + path);
+    });
   },
-  'Import AIMind *filename': function(filename) {
-    AIMind.import(filename);
-    showVoiceAndConsoleResponse('Imported AIMind from ' + filename);
+  'Import AIMind': function() {
+    AIMind.import(function(path) {
+      showVoiceAndConsoleResponse('Imported AIMind from ' + path);
+    });
   },
   'Grow *keyword (for *limit)': handleGrow
 };

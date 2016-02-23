@@ -32,7 +32,7 @@ function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
 
   // Set up a POST with JSON result format.
   xmlhttp.open('POST', endpoint, true); // GET can have caching probs, so POST
-  xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded; charset=utf-8');
+  xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   xmlhttp.setRequestHeader("Accept", "application/sparql-results+json");
 
   // Set up callback to get the response asynchronously.
@@ -68,16 +68,12 @@ module.exports = {
   getAbstractByUri: function(uri, onSuccess, onFail) {
     var query = [
        "PREFIX dbpedia: <http://dbpedia.org/resource/>",
-       "SELECT ?name ?abs ?nameChi ?absChi",
+       "SELECT ?name ?abs ?chi",
        "WHERE {",
           "<" + uri + "> rdfs:label ?name.",
           "<" + uri + "> dbo:abstract ?abs.",
-          "<" + uri + "> rdfs:label ?nameChi.",
-          "<" + uri + "> dbo:abstract ?absChi.",
           "FILTER (langMatches(lang(?name),'en')).",
           "FILTER (langMatches(lang(?abs),'en')).",
-          "FILTER (langMatches(lang(?nameChi),'zh')).",
-          "FILTER (langMatches(lang(?absChi),'zh')).",
        "}"
       ].join(" ");
     sparqlQueryJson(query, this.sparqlEndpoint, onSuccess, onFail, true);
@@ -145,7 +141,6 @@ module.exports = {
         prop: 'revisions',
         rvprop: 'content',
         format: 'json',
-        //charset: 'utf-8',
         rvsection: '0', // infobox
         rvparse: '', // convert to HTML
         redirects: '', // follow title redirects

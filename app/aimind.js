@@ -157,9 +157,8 @@ var _export = function(callback) {
   Object.keys(graph.graph).map(function(uri){
     var feature = {
       $: {data: 'root', id: '0', uri: ''},
-      neighbor: {$: {dest: '', relationship: '', weight: '0'}},
-      parent: {$: {dest: '', relationship: '', weight: '1'}},
-      speak: {$: {value: ''}}
+      neighbors: { neighbor: [] },
+      speak: ''
     };
 
     // Add a new feature into JSON object
@@ -167,19 +166,7 @@ var _export = function(callback) {
     feature.$.id = graph.graph[uri].ref;
     feature.$.uri = uri;
 
-    graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
-      if(!graph.graph[uri].depends[neighbor_uri]) {
-        feature.neighbor.$.dest = graph.graph[neighbor_uri].ref;
-        feature.neighbor.$.relationship = '';
-      }
-    });
-
-    graph.graph[uri].depends.map(function(parent_uri){
-      feature.parent.$.dest = graph.graph[parent_uri].ref;
-      feature.parent.$.relationship = '';
-    });
-
-    feature.speak.$.value = SearchStorage.get(uri).speak;
+    feature.speak = SearchStorage.get(uri).speak;
 
     graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
       var neighbor = {$: {dest: '', relationship: '', weight: '0'}}

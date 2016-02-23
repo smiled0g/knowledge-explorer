@@ -49,21 +49,6 @@ var Console = {
     $('#chatbox').prepend(item);
   },
 
-
-  // Display engine's text response on chatbox
-  showNodeInfo: function(info) {
-    var item = $('<div class="response"></div>');
-    item.text(info);
-    // Edit button
-    var addButton = $('<button class="add">Edit</button>');
-        addButton.click(function(){
-          //
-        }.bind(this));
-    item.prepend(addButton);
-    $('#chatbox').prepend(item);
-  },
-
-
   // Display engine's search result on chatbox
   showResultsList: function(results) {
     var item = $('<div class="response"></div>');

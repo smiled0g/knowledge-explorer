@@ -161,8 +161,7 @@ var handleGrow = function(keyword, limit) {
       addRelationshipsToQueue(uri);
       processNextUriOnQueue();
     } else {
-      DBPedia.getAbstractByUri(uri, function(abstract_result){
-        // If abstract not found on the uri, move on
+      DBPedia.getAbstractByUri(uri, function(abstract_result) {       // If abstract not found on the uri, move on
         if(abstract_result.results.bindings.length === 0)  {
           processNextUriOnQueue();
         } else {

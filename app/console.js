@@ -121,20 +121,21 @@ var Console = {
   processInput: function(command, commandsList) {
     // try and match recognized text to one of the commands on the list
     for (var j = 0, l = commandsList.length; j < l; j++) {
-     var result = commandsList[j].command.exec(command);
-     if (result) {
-       var parameters = result.slice(1);
-       if (true) {
+      var result = commandsList[j].command.exec(command);
+      if (result) {
+        var parameters = result.slice(1);
+        if (true) {
          root.console.log('command matched: %c'+commandsList[j].originalPhrase);
          if (parameters.length) {
            root.console.log('with parameters', parameters);
          }
-       }
-       // execute the matched command
-       commandsList[j].callback.apply(this, parameters);
-       return true;
-     }
+        }
+        // execute the matched command
+        commandsList[j].callback.apply(this, parameters);
+        return true;
+      }
     }
+    Console.showResponse("I\'m sorry, I couldn\'t match that command")
   }
 
 }

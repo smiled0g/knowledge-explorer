@@ -118,9 +118,18 @@ var Knowledge = {
     return ref;
   },
 
-  // Remove a node from knowledge graph (not yet implemented)
+  // Remove a node from knowledge graph
   removeNode: function(uri, redraw) {
     var graph = this.getGraph();
+
+    if (!graph.graph[uri]) return false;
+
+    for (rel_uri in graph.graph) {
+      this.removeLink(uri, rel_uri)
+      this.removeLink(rel_uri, uri)
+    }
+
+    delete graph.graph[uri]
 
     if(redraw) {
       this.drawGraph();
@@ -149,6 +158,8 @@ var Knowledge = {
   // Remove relationship from knowledge graph
   removeLink: function(uri_from, uri_to, redraw) {
     var graph = this.getGraph();
+
+    console.log(uri_from, uri_to)
 
     // Remove link from graph, but preserve relationship
     if(graph.graph[uri_from] && graph.graph[uri_to]) {

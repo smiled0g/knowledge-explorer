@@ -217,6 +217,11 @@ var handleUnlink = function(r1, r2) {
   }
 }
 
+var handleRemove = function(r) {
+  var uri = Knowledge.getUriFromRefOrName(r);
+  Knowledge.removeNode(uri, true)
+}
+
 var commands = {
   '(hi) (hello) jimmy': function() {
     showVoiceAndConsoleResponse('I\'m here!');
@@ -230,6 +235,7 @@ var commands = {
   'From *keyword find *ontology': handleSeachByOntology,
   'Link *r1 and *r2': handleLink,
   'Unlink *r1 and *r2': handleUnlink,
+  'Remove *r': handleRemove,
   'Activate voice command': function() {
     annyang.start();
     showVoiceAndConsoleResponse('Voice command activated');

@@ -5,6 +5,35 @@
 var $ = require('jquery'),
     infobox = require('wiki-infobox-parser');
 
+// Hack for delaying queries
+var queryQueue = [],
+    queryDelay = 100, // process query every 100ms
+    processQueriesTimer = null;
+
+function enqueueQuery(queryFn) {
+  // Push query into queue
+  queryQueue.push(queryFn);
+  // Process query if there's no query/delayed query being placed
+  if(!processQueriesTimer) {
+    processQueriesTimer = setTimeout(processQueries, queryDelay);
+  }
+}
+
+function processQueries() {
+  if(queryQueue.length === 0) return;
+  // Pop query from queue
+  var queryFn = queryQueue.shift();
+  // Schedule for processing next query
+  if(queryQueue.length > 0) {
+    processQueriesTime = setTimeout(processQueries, queryDelay);
+  } else {
+    processQueriesTimer = null;
+  }
+  // Execute the query
+  queryFn();
+}
+// End of the hack
+
 function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
   /**
    * Author: Mark Wallace
@@ -76,7 +105,11 @@ module.exports = {
           "FILTER (langMatches(lang(?abs),'en')).",
        "}"
       ].join(" ");
-    sparqlQueryJson(query, this.sparqlEndpoint, onSuccess, onFail, true);
+
+    // Hack for delaying queries
+    enqueueQuery (
+      sparqlQueryJson.bind(this, query, this.sparqlEndpoint, onSuccess, onFail, true)
+    );
   },
 
   // Fetch properties of a particular type of a resource with given uri
@@ -93,15 +126,19 @@ module.exports = {
          "FILTER (langMatches(lang(?property_label),'en')).",
       "}"
     ].join(" ");
-    // Execute query
-    sparqlQueryJson(query, this.sparqlEndpoint, function(results) {
-      // Format query
-      var list = {};
-      results.results.bindings.map(function(r){
-        list[r.property.value] = r.property_label.value;
-      });
-      onSuccess(list);
-    }, onFail, true);
+
+    // Hack for delaying queries
+    enqueueQuery (
+      // Execute query
+      sparqlQueryJson.bind(this,query, this.sparqlEndpoint, function(results) {
+        // Format query
+        var list = {};
+        results.results.bindings.map(function(r){
+          list[r.property.value] = r.property_label.value;
+        });
+        onSuccess(list);
+      }, onFail, true)
+    );
   },
 
   // Fetch properties and relationships of a resource with given uri
@@ -117,18 +154,22 @@ module.exports = {
          "FILTER (langMatches(lang(?relationship_label),'en')).",
       "}"
     ].join(" ");
-    // Execute query
-    sparqlQueryJson(query, this.sparqlEndpoint, function(results) {
-      // Format query
-      var relationships = {};
-      results.results.bindings.map(function(r){
-        if(!relationships[r.property.value]) {
-          relationships[r.property.value] = {};
-        }
-        relationships[r.property.value][r.relationship_label.value] = r.relationship.value;
-      });
-      onSuccess(relationships);
-    }, onFail, true);
+
+    // Hack for delaying queries
+    enqueueQuery (
+      // Execute query
+      sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function(results) {
+        // Format query
+        var relationships = {};
+        results.results.bindings.map(function(r){
+          if(!relationships[r.property.value]) {
+            relationships[r.property.value] = {};
+          }
+          relationships[r.property.value][r.relationship_label.value] = r.relationship.value;
+        });
+        onSuccess(relationships);
+      }, onFail, true)
+    );
   },
 
   // Fetch Wikipedia's infobox widget

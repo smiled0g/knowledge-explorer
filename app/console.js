@@ -71,7 +71,7 @@ var Console = {
   showProgressResponse: function(initialMessage, successMessage, addListener) {
     var item = $('<div class="response"></div>');
     var msg = $('<div></div>').text(initialMessage).appendTo(item);
-    var progress = $('<div class="progress"><span class="amount"></span><div class="bar"></div></div>').appendTo(item);
+    var progress = $('<div class="progress"><span class="amount">Please wait ...</span><div class="bar"></div></div>').appendTo(item);
     // function that watch progress, which takes 1 argument: percentage of the progress
     var progressListener = function(percent) {
       if(percent === 100) {

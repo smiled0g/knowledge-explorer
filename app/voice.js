@@ -2,7 +2,8 @@
  **  Voice engine controller
  */
 
-var isMute = false;
+var isMute = false,
+    isListening = false;
 
 // Generate voice response
 var speak = function(text, voiceId) {
@@ -34,12 +35,36 @@ var listen = function(commands) {
 
     // Start listening. You can call this here, or attach this call to an event, button, etc.
     annyang.start();
+    isListening = true;
   }
+}
+
+// Pause listening
+var pauseListening = function() {
+  if (annyang) {
+    annyang.pause();
+    isListening = false;
+  }
+}
+
+// Resume listening
+var resumeListening = function() {
+  if (annyang) {
+    annyang.resume();
+    isListening = true;
+  }
+}
+
+// Return if annyaang is listening
+var isListening = function() {
+  return isListening;
 }
 
 module.exports = {
   speak: speak,
   listen: listen,
+  pauseListening: pauseListening,
+  resumeListening: resumeListening,
   mute: function() { isMute = true ;},
   unmute: function() { isMute = false ;}
 }

@@ -9,8 +9,9 @@ var run = function(data) {
   var Graph = require('./graph');
   Graph(Knowledge.getGraph()).run();
 
-  var Voice = require('./voice');
   Voice.listen(commands);
+  // Disable voice command by default
+  Voice.pauseListening();
 
   var Console = require('./console');
   Console.initQueryInput(commands);
@@ -237,11 +238,11 @@ var commands = {
   'Unlink *r1 and *r2': handleUnlink,
   'Remove *r': handleRemove,
   'Activate voice command': function() {
-    annyang.start();
+    Voice.pauseListening();
     showVoiceAndConsoleResponse('Voice command activated');
   },
   'Deactivate voice command': function() {
-    annyang.abort();
+    Voice.resumeListening();
     showVoiceAndConsoleResponse('Voice command deactivated');
   },
   'Mute': function() { Voice.mute(); },

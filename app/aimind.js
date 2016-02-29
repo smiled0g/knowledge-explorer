@@ -6,7 +6,8 @@ var Graph = require('./graph'),
     fs = require('fs'),
     pd = require('./pretty-data').pd,
     xml2js = require('xml2js'),
-    dialog = require('electron').remote.dialog;
+    dialog = require('electron').remote.dialog,
+    bootstrap = require('bootstrap');
 
 
 var handleAddResourceToGraph = function(uri) {
@@ -74,11 +75,39 @@ var importFeatureWithoutURI = function(feature, relationships, counter) {
   counter();
 }
 
+var promptMatchFeature = function(feature, counter, onSuccess, onFailure) {
+  DBPedia.searchByKeyword(feature.$.data, function(results) {
+    if (results.length > 0) {
+      labels = []
+      for (result of results) {
+        labels.push(result.label)
+      }
+      labels.push("None")
+
+      // Show the dialog box
+      var index = dialog.showMessageBox({
+        message: feature.$.data,
+        detail: "Select the DBPedia entry that best matches this feature",
+        buttons: labels });
+
+      // Bind the feature to its new URI
+      if (index != results.length) {
+        feature.$.uri = results[index].uri
+        onSuccess(feature, counter);
+      } else {
+        onFailure(feature, counter);
+      }
+
+    } else {
+      console.log("Could not find any DBPedia entries for " + feature.$.data);
+      onFailure(feature, counter);
+    }
+  });
+}
 
 // Import an AIMind XML file
 var _import = function() {
   var FeatureMapping = {}; // Temporary mapping from $.data -> DBPedia's URI
-
 
   dialog.showOpenDialog(
     { title: 'Import from AIMind XML', properties: ['openFile'] },
@@ -114,6 +143,7 @@ var _import = function() {
           var idToUriMap = {};
           result.AIMind.Features[0].Feature.map(function(feature) {
             var uri = feature.$.uri || ('#'+feature.$.data);
+            console.log(uri);
             idToUriMap[feature.$.id] = uri;
           });
 
@@ -124,17 +154,19 @@ var _import = function() {
             } else {
               // Handle xml created manually
 
-              // Create list of relationships
-              var relationships = {};
-              if(feature.neighbors.length > 0 && feature.neighbors[0].neighbor) {
-                feature.neighbors[0].neighbor.map(function(neighbor) {
-                  var relationship = {};
-                  relationship[neighbor.$.relationship] = '#'+neighbor.$.relationship;
-                  relationships[idToUriMap[neighbor.$.dest]] = relationship;
-                })
-              }
-
-              importFeatureWithoutURI(feature, relationships, counter);
+              // Prompt match to DBpedia URI
+              promptMatchFeature(feature, counter, importFeatureWithURI, function(feature, counter) {
+                // Create list of relationships
+                var relationships = {};
+                if(feature.neighbors.length > 0 && feature.neighbors[0].neighbor) {
+                  feature.neighbors[0].neighbor.map(function(neighbor) {
+                    var relationship = {};
+                    relationship[neighbor.$.relationship] = '#'+neighbor.$.relationship;
+                    relationships[idToUriMap[neighbor.$.dest]] = relationship;
+                  })
+                }
+                importFeatureWithoutURI(feature, relationships, counter);
+              });
             }
           });
         });

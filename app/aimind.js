@@ -6,8 +6,7 @@ var Graph = require('./graph'),
     fs = require('fs'),
     pd = require('./pretty-data').pd,
     xml2js = require('xml2js'),
-    dialog = require('electron').remote.dialog,
-    bootstrap = require('bootstrap');
+    dialog = require('electron').remote.dialog;
 
 
 var handleAddResourceToGraph = function(uri) {

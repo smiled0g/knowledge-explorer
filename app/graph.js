@@ -596,14 +596,10 @@ module.exports = function(data) {
         docsClosePadding  = 8,
         desiredDocsHeight = 300;
 
-    function resize(showDocs) {
-        var docsHeight  = 0,
-            graphHeight = 0,
-            $graph      = $('#graph-container'),
-            $close      = $('#docs-close');
-
-        graphHeight = window.innerHeight - docsHeight;
-        $graph.css('height', graphHeight + 'px');
+    function resize() {
+        $('#graph > svg')
+          .attr('height', $('#graph').height())
+          .attr('width', $('#graph').width());
     }
 
     // Debug

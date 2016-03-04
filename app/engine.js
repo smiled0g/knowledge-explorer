@@ -53,12 +53,22 @@ var handleSearchByKeyword = function(keyword) {
           });
         }
         DBPedia.getPropertiesByUri(results[0].uri, function(relationships){
-          SearchStorage.add({
-            uri: results[0].uri,
-            label: results[0].label,
-            description: formatted_description,
-            speak: first_sentence,
-            relationships: relationships
+          DBPedia.getAbstractByUriAndLanguage(results[0].uri, 'zh',  function(zh_result) {
+            var zh_abstract = "",
+                zh_label = "";
+            if(zh_result.results.bindings.length > 0)  {
+              zh_abstract = zh_result.results.bindings[0].abs.value,
+              zh_label = zh_result.results.bindings[0].name.value;
+            }
+            SearchStorage.add({
+              uri: results[0].uri,
+              label: results[0].label,
+              zh_label: zh_label,
+              description: formatted_description,
+              speak: first_sentence,
+              zh_speak: zh_abstract,
+              relationships: relationships
+            });
           });
         });
       });
@@ -162,7 +172,7 @@ var handleGrow = function(keyword, limit) {
       addRelationshipsToQueue(uri);
       processNextUriOnQueue();
     } else {
-      DBPedia.getAbstractByUri(uri, function(abstract_result) {       // If abstract not found on the uri, move on
+      DBPedia.getAbstractByUriAndLanguage(uri, 'en', function(abstract_result) {       // If abstract not found on the uri, move on
         if(abstract_result.results.bindings.length === 0)  {
           processNextUriOnQueue();
         } else {
@@ -172,16 +182,26 @@ var handleGrow = function(keyword, limit) {
                 label = abstract_result.results.bindings[0].name.value,
                 formatted_description = DBPedia.getFormattedDescription(abstract),
                 first_sentence = DBPedia.getFirstSentence(formatted_description);
-            SearchStorage.add({
-              uri: uri,
-              label: label,
-              description: formatted_description,
-              speak: first_sentence,
-              relationships: relationships
+            DBPedia.getAbstractByUriAndLanguage(uri, 'zh',  function(zh_result) {
+              var zh_abstract = "",
+                  zh_label = "";
+              if(zh_result.results.bindings.length > 0)  {
+                zh_abstract = zh_result.results.bindings[0].abs.value,
+                zh_label = zh_result.results.bindings[0].name.value;
+              }
+              SearchStorage.add({
+                uri: uri,
+                label: label,
+                zh_label: zh_label,
+                description: formatted_description,
+                speak: first_sentence,
+                zh_speak: zh_abstract,
+                relationships: relationships
+              });
+              handleAddResourceToGraph(uri, false);
+              addRelationshipsToQueue(uri);
+              processNextUriOnQueue();
             });
-            handleAddResourceToGraph(uri, false);
-            addRelationshipsToQueue(uri);
-            processNextUriOnQueue();
           });
         }
       });

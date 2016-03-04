@@ -33,7 +33,7 @@ var importFeatureWithURI = function(feature, counter) {
   if(SearchStorage.get(uri)) {
     handleAddResourceToGraph(uri);
   } else {
-    DBPedia.getAbstractByUri(uri, function(abstract_result){
+    DBPedia.getAbstractByUriAndLanguage(uri, 'en', function(abstract_result){
       // If abstract not found on the uri, move on
       if(abstract_result.results.bindings.length === 0)  {
         return;
@@ -187,17 +187,20 @@ var _export = function(callback) {
 
   Object.keys(graph.graph).map(function(uri){
     var feature = {
-      $: {data: 'root', id: '0', uri: ''},
+      $: {data: 'root', 'zh-data': '', id: '0', uri: ''},
       neighbors: { neighbor: [] },
-      speak: ''
+      speak: '',
+      'zh-speak': ''
     };
 
     // Add a new feature into JSON object
     feature.$.data = SearchStorage.get(uri).label;
+    feature.$['zh-data'] = SearchStorage.get(uri).zh_label || '';
     feature.$.id = graph.graph[uri].ref;
     feature.$.uri = uri;
 
     feature.speak = SearchStorage.get(uri).speak;
+    feature['zh-speak'] = SearchStorage.get(uri).zh_speak || '';
 
     graph.graph[uri].dependedOnBy.map(function(neighbor_uri){
       var neighbor = {$: {dest: '', relationship: '', weight: '0'}}

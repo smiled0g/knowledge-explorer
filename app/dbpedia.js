@@ -94,15 +94,15 @@ module.exports = {
     );
   },
 
-  getAbstractByUri: function(uri, onSuccess, onFail) {
+  getAbstractByUriAndLanguage: function(uri, lang, onSuccess, onFail) {
     var query = [
        "PREFIX dbpedia: <http://dbpedia.org/resource/>",
-       "SELECT ?name ?abs ?chi",
+       "SELECT ?name ?abs",
        "WHERE {",
           "<" + uri + "> rdfs:label ?name.",
           "<" + uri + "> dbo:abstract ?abs.",
-          "FILTER (langMatches(lang(?name),'en')).",
-          "FILTER (langMatches(lang(?abs),'en')).",
+          "FILTER (langMatches(lang(?name),'"+ lang + "')).",
+          "FILTER (langMatches(lang(?abs),'"+ lang + "')).",
        "}"
       ].join(" ");
 

@@ -7,7 +7,7 @@ var $ = require('jquery'),
 
 // Hack for delaying queries
 var queryQueue = [],
-    queryDelay = 100, // process query every 100ms
+    queryDelay = 50, // process query every 50ms
     processQueriesTimer = null;
 
 function enqueueQuery(queryFn) {
@@ -147,6 +147,37 @@ module.exports = {
       "SELECT DISTINCT ?relationship ?relationship_label ?property",
       "WHERE {",
          "<" + uri + "> ?relationship ?property .",
+         "?property rdfs:label ?property_label .",
+         "?relationship rdfs:label ?relationship_label .",
+         "FILTER regex(?relationship,'dbpedia.org','i')",
+         "FILTER (langMatches(lang(?property_label),'en')).",
+         "FILTER (langMatches(lang(?relationship_label),'en')).",
+      "}"
+    ].join(" ");
+
+    // Hack for delaying queries
+    enqueueQuery (
+      // Execute query
+      sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function(results) {
+        // Format query
+        var relationships = {};
+        results.results.bindings.map(function(r){
+          if(!relationships[r.property.value]) {
+            relationships[r.property.value] = {};
+          }
+          relationships[r.property.value][r.relationship_label.value] = r.relationship.value;
+        });
+        onSuccess(relationships);
+      }, onFail, true)
+    );
+  },
+
+  // Fetch incoming relationships of a resource with given uri
+  getIncomingRelationshipsByUri: function(uri, onSuccess, onFail) {
+    var query = [
+      "SELECT DISTINCT ?relationship ?relationship_label ?property",
+      "WHERE {",
+         "?property ?relationship <" + uri + "> .",
          "?property rdfs:label ?property_label .",
          "?relationship rdfs:label ?relationship_label .",
          "FILTER regex(?relationship,'dbpedia.org','i')",

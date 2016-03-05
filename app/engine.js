@@ -106,7 +106,6 @@ var handleSeachByOntology = function(keyword, ontology) {
   var uri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword);
 
   DBPedia.getRelationshipsOfTypeByUri(uri, ontology, function(data) {
-    console.log(data);
     if(Object.keys(data).length > 0) {
       Console.showResultsList(data);
     } else {
@@ -130,15 +129,50 @@ var handleGrow = function(keyword, limit) {
     // Avoid adding same resource twice
     if(!addedUri[uri]) {
       addedUri[uri] = true;
+
       growQueue.push(uri);
     }
   };
 
-  // Add initial relationships from uri to queue
+  // Add relationships from uri to queue
   var addRelationshipsFromUriToQueue = function(uri) {
     // Loop through all relationship and add to queue if they're not already added
     Object.keys(SearchStorage.get(uri).relationships).map(function(neighbor_uri){
       addUriToQueue(neighbor_uri);
+    });
+  }
+
+  // Find and add incoming relationships from uri to queue
+  var addIncomingRelationshipsFromUriToQueue = function(uri, callback) {
+    // Search for incoming relatioship
+    DBPedia.getIncomingRelationshipsByUri(uri, function(incoming_relationships) {
+      // A dictionary that holds frequency of relatioship types
+      //   it will be used to filter out some of the unwanted relatioships
+      var relationshipTypeFrequency = {};
+      // Populate relatioshipTypeFrequency
+      Object.keys(incoming_relationships).map(function(incoming_uri) {
+        Object.keys(incoming_relationships[incoming_uri]).map(function(relationship_type) {
+          relationshipTypeFrequency[relationship_type] = relationshipTypeFrequency[relationship_type]+1 || 1;
+        });
+      });
+
+      // Filter out some of the unwanted relatioships
+      //   In this case, we are illiminating relatioship of types that appears too many times
+      //   along with redirect and disambiguates relatioship
+      Object.keys(incoming_relationships).map(function(incoming_uri) {
+        if( incoming_relationships[incoming_uri]['Wikipage redirect'] ||
+            incoming_relationships[incoming_uri]['Wikipage disambiguates']) return;
+
+        var relationshipTypeFrequencyThreshold = 10;
+        for(var relationship_type in incoming_relationships[incoming_uri]) {
+          if(relationshipTypeFrequency[relationship_type] > relationshipTypeFrequencyThreshold) return;
+        };
+
+
+        addUriToQueue(incoming_uri);
+      });
+
+      callback();
     });
   }
 
@@ -194,7 +228,6 @@ var handleGrow = function(keyword, limit) {
         } else {
           // Fetch relationship
           DBPedia.getRelationshipsByUri(uri, function(relationships){
-            console.log(uri, abstract_result);
             var abstract = abstract_result.results.bindings[0].abs.value,
                 label = abstract_result.results.bindings[0].name.value,
                 formatted_description = DBPedia.getFormattedDescription(abstract),
@@ -221,7 +254,8 @@ var handleGrow = function(keyword, limit) {
               handleAddResourceToGraph(uri, false);
               // Add outgoing relationships to grow queue
               addRelationshipsFromUriToQueue(uri);
-              processNextUriOnQueue();
+              // Add incoming relationships to grow queue
+              addIncomingRelationshipsFromUriToQueue(uri, processNextUriOnQueue);
             });
           });
         }
@@ -237,8 +271,9 @@ var handleGrow = function(keyword, limit) {
     }
   );
 
+  // Add initial URI to grow from root's relationships
   addRelationshipsFromUriToQueue(rootUri);
-  processNextUriOnQueue();
+  addIncomingRelationshipsFromUriToQueue(rootUri, processNextUriOnQueue);
 }
 
 var handleLink = function(r1, r2) {

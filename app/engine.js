@@ -27,9 +27,40 @@ var showConsoleInfoboxResponse = function($response, option) {
 }
 
 var handleSearchByKeyword = function(keyword) {
+  // Helper function that return if label/uri and keyword searched matches each other
+  var isKeywordMatchedLabelOrUri = function(keyword, label, uri) {
+    label = label.replace(/ /g, '_').toLowerCase();
+    keyword = keyword.replace(/ /g, '_').toLowerCase();
+    console.log(label, keyword, uri);
+    return label.indexOf(keyword) >= 0 ||
+           uri.split('/').pop().toLowerCase() === keyword;
+  }
+  // Perform DBPedia search
   DBPedia.searchByKeyword(keyword, function(results) {
     console.log(results);
     if(results.length > 0) {
+      // Check if label or uri matches keyword, if not, search for the one that matches
+      if( !isKeywordMatchedLabelOrUri(keyword, results[0].label, results[0].uri) ) {
+        // Search
+        var match_found = false;
+        for(var i=1; i<results.length; i++) {
+          if( isKeywordMatchedLabelOrUri(keyword, results[i].label, results[i].uri) ) {
+            match_found = true;
+            results[0] = results[i]; // HACK: Shamelessly assign matched result to results[0]
+            break;
+          }
+        }
+        // If match not found, display results to user
+        if(!match_found) {
+          var results_uri_label = {};
+          results.map(function(result) {
+            results_uri_label[result.uri] = result.label;
+          });
+          console.log(results_uri_label);
+          Console.showResultsList(results_uri_label);
+          return;
+        }
+      }
       // Speak first sentence of the description
       var formatted_description = DBPedia.getFormattedDescription(results[0].description)
       var first_sentence = DBPedia.getFirstSentence(formatted_description);
@@ -100,7 +131,7 @@ var handleAddResourceToGraph = function(uri, redraw) {
   );
 }
 
-var handleSeachByOntology = function(keyword, ontology) {
+var handleSearchByOntology = function(keyword, ontology) {
   keyword = keyword.replace(/\W/g, '')
 
   var uri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword);
@@ -309,7 +340,7 @@ var commands = {
   'Search (for) *keyword': handleSearchByKeyword,
   'Add (to graph)': handleAddLastSearchResultToGraph,
   'Add *uri to graph': handleAddLastSearchResultToGraph,
-  'From *keyword find *ontology': handleSeachByOntology,
+  'From *keyword find *ontology': handleSearchByOntology,
   'Link *r1 and *r2': handleLink,
   'Unlink *r1 and *r2': handleUnlink,
   'Remove *r': handleRemove,

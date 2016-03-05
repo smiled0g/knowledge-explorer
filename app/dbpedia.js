@@ -88,7 +88,7 @@ module.exports = {
   searchByKeyword: function(keyword, onSuccess, onFail, limit) {
     $.getJSON(
       this.keywordLookupUrl,
-      { QueryString: keyword, MaxHits: (limit || 5) },
+      { QueryString: keyword, MaxHits: (limit || 10) },
       function(data){ return onSuccess(data.results); },
       onFail
     );

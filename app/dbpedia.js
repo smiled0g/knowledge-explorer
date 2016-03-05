@@ -113,7 +113,7 @@ module.exports = {
   },
 
   // Fetch properties of a particular type of a resource with given uri
-  getPropertiesOfTypeByUri: function(uri, type, onSuccess, onFail) {
+  getRelationshipsOfTypeByUri: function(uri, type, onSuccess, onFail) {
     // Get peoperties but NOT relationships
     var query = [
       "SELECT DISTINCT ?property ?property_label",
@@ -142,7 +142,7 @@ module.exports = {
   },
 
   // Fetch properties and relationships of a resource with given uri
-  getPropertiesByUri: function(uri, onSuccess, onFail) {
+  getRelationshipsByUri: function(uri, onSuccess, onFail) {
     var query = [
       "SELECT DISTINCT ?relationship ?relationship_label ?property",
       "WHERE {",

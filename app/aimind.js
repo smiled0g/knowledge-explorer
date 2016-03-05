@@ -38,7 +38,7 @@ var importFeatureWithURI = function(feature, counter) {
       if(abstract_result.results.bindings.length === 0)  {
         return;
       } else {
-        DBPedia.getPropertiesByUri(uri, function(relationships){
+        DBPedia.getRelationshipsByUri(uri, function(relationships){
           console.log(uri, abstract_result);
           var abstract = abstract_result.results.bindings[0].abs.value,
               label = abstract_result.results.bindings[0].name.value,
@@ -62,7 +62,7 @@ var importFeatureWithURI = function(feature, counter) {
 
 var importFeatureWithoutURI = function(feature, relationships, counter) {
   var uri = '#'+feature.$.data;
-  
+
   SearchStorage.add({
     uri: uri,
     label: feature.$.data,

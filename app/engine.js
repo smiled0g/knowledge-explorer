@@ -52,7 +52,7 @@ var handleSearchByKeyword = function(keyword) {
             }
           });
         }
-        DBPedia.getPropertiesByUri(results[0].uri, function(relationships){
+        DBPedia.getRelationshipsByUri(results[0].uri, function(relationships){
           DBPedia.getAbstractByUriAndLanguage(results[0].uri, 'zh',  function(zh_result) {
             var zh_abstract = "",
                 zh_label = "";
@@ -105,7 +105,7 @@ var handleSeachByOntology = function(keyword, ontology) {
 
   var uri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword);
 
-  DBPedia.getPropertiesOfTypeByUri(uri, ontology, function(data) {
+  DBPedia.getRelationshipsOfTypeByUri(uri, ontology, function(data) {
     console.log(data);
     if(Object.keys(data).length > 0) {
       Console.showResultsList(data);
@@ -125,15 +125,20 @@ var handleGrow = function(keyword, limit) {
       limit = limit || 10;
       amountToGrow = limit;
 
+  // Add particular uri to grow queue
+  var addUriToQueue = function(uri) {
+    // Avoid adding same resource twice
+    if(!addedUri[uri]) {
+      addedUri[uri] = true;
+      growQueue.push(uri);
+    }
+  };
+
   // Add initial relationships from uri to queue
-  var addRelationshipsToQueue = function(uri) {
+  var addRelationshipsFromUriToQueue = function(uri) {
     // Loop through all relationship and add to queue if they're not already added
     Object.keys(SearchStorage.get(uri).relationships).map(function(neighbor_uri){
-      // Avoid adding same resource twice
-      if(!addedUri[neighbor_uri]) {
-        addedUri[neighbor_uri] = true;
-        growQueue.push(neighbor_uri);
-      }
+      addUriToQueue(neighbor_uri);
     });
   }
 
@@ -141,6 +146,16 @@ var handleGrow = function(keyword, limit) {
   var onFinish = function() {
     Knowledge.drawGraph();
     onProgress(100);
+  }
+
+  // Function that handle selecting what node in queue to grow next, and pop that from the queue
+  // TODO: Add heuristic that helps growing better than BFS
+  var popQueue = function() {
+    if(growQueue.length > 0) {
+      return growQueue.shift();
+    } else {
+      return null;
+    }
   }
 
   var processNextUriOnQueue = function() {
@@ -151,8 +166,8 @@ var handleGrow = function(keyword, limit) {
 
     onProgress((limit-amountToGrow)*100.0/limit);
 
-    // Get first URI on the queue
-    var uri = growQueue.shift();
+    // Get next URI to process
+    var uri = popQueue();
 
     // DEBUG
     // console.log(uri);
@@ -169,19 +184,22 @@ var handleGrow = function(keyword, limit) {
     //   otherwise, fetch the resource data and add to graph
     if(SearchStorage.get(uri)) {
       handleAddResourceToGraph(uri, false);
-      addRelationshipsToQueue(uri);
+      addRelationshipsFromUriToQueue(uri);
       processNextUriOnQueue();
     } else {
+      // Search for English abstract
       DBPedia.getAbstractByUriAndLanguage(uri, 'en', function(abstract_result) {       // If abstract not found on the uri, move on
         if(abstract_result.results.bindings.length === 0)  {
           processNextUriOnQueue();
         } else {
-          DBPedia.getPropertiesByUri(uri, function(relationships){
+          // Fetch relationship
+          DBPedia.getRelationshipsByUri(uri, function(relationships){
             console.log(uri, abstract_result);
             var abstract = abstract_result.results.bindings[0].abs.value,
                 label = abstract_result.results.bindings[0].name.value,
                 formatted_description = DBPedia.getFormattedDescription(abstract),
                 first_sentence = DBPedia.getFirstSentence(formatted_description);
+            // Fetch Chinese abstract
             DBPedia.getAbstractByUriAndLanguage(uri, 'zh',  function(zh_result) {
               var zh_abstract = "",
                   zh_label = "";
@@ -189,6 +207,7 @@ var handleGrow = function(keyword, limit) {
                 zh_abstract = zh_result.results.bindings[0].abs.value,
                 zh_label = zh_result.results.bindings[0].name.value;
               }
+              // Add search result to SearchStorage
               SearchStorage.add({
                 uri: uri,
                 label: label,
@@ -198,8 +217,10 @@ var handleGrow = function(keyword, limit) {
                 zh_speak: zh_abstract,
                 relationships: relationships
               });
+              // Add resource to graph
               handleAddResourceToGraph(uri, false);
-              addRelationshipsToQueue(uri);
+              // Add outgoing relationships to grow queue
+              addRelationshipsFromUriToQueue(uri);
               processNextUriOnQueue();
             });
           });
@@ -216,7 +237,7 @@ var handleGrow = function(keyword, limit) {
     }
   );
 
-  addRelationshipsToQueue(rootUri);
+  addRelationshipsFromUriToQueue(rootUri);
   processNextUriOnQueue();
 }
 

@@ -2,6 +2,9 @@
   "name": "knowledge-explorer",
   "version": "0.1.0",
   "main": "main.js",
+  "scripts": {
+    "start": "npm install && ./node_modules/.bin/electron ."
+  },
   "dependencies": {
     "crypto": "0.0.3",
     "d3": "^3.5.12",

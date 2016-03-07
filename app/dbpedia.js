@@ -3,7 +3,8 @@
  */
 
 var $ = require('jquery'),
-    infobox = require('wiki-infobox-parser');
+    infobox = require('wiki-infobox-parser'),
+    QueryCache = require('./query-cache');
 
 // Hack for delaying queries
 var queryQueue = [],
@@ -46,6 +47,14 @@ function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
    * [1] http://www.w3.org/TR/sparql11-results-json/
    */
 
+  // Try to fetch query result from cache first
+  var cachedResult = QueryCache.get(endpoint, queryStr);
+  if(cachedResult) {
+    onSuccess(cachedResult);
+    return;
+  }
+
+  // If cache not found, perform query
   var querypart = "query=" + encodeURIComponent(queryStr);
 
   // Get our HTTP request object.
@@ -68,6 +77,8 @@ function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
   xmlhttp.onreadystatechange = function() {
    if(xmlhttp.readyState == 4) {
      if(xmlhttp.status == 200) {
+       // Cache result for further queries
+       QueryCache.set(endpoint, queryStr, $.parseJSON(xmlhttp.responseText));
        onSuccess($.parseJSON(xmlhttp.responseText));
      } else {
        onFail(xmlhttp.status, xmlhttp.responseText);

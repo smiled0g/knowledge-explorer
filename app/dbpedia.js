@@ -144,7 +144,7 @@ module.exports = {
   // Fetch properties and relationships of a resource with given uri
   getRelationshipsByUri: function(uri, onSuccess, onFail) {
     var query = [
-      "SELECT DISTINCT ?relationship ?relationship_label ?property",
+      "SELECT DISTINCT (?relationship AS ?r) (?relationship_label AS ?rl) (?property AS ?p)",
       "WHERE {",
          "<" + uri + "> ?relationship ?property .",
          "?property rdfs:label ?property_label .",
@@ -161,11 +161,11 @@ module.exports = {
       sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function(results) {
         // Format query
         var relationships = {};
-        results.results.bindings.map(function(r){
-          if(!relationships[r.property.value]) {
-            relationships[r.property.value] = {};
+        results.results.bindings.map(function(result){
+          if(!relationships[result.p.value]) {
+            relationships[result.p.value] = {};
           }
-          relationships[r.property.value][r.relationship_label.value] = r.relationship.value;
+          relationships[result.p.value][result.rl.value] = result.r.value;
         });
         onSuccess(relationships);
       }, onFail, true)
@@ -175,7 +175,7 @@ module.exports = {
   // Fetch incoming relationships of a resource with given uri
   getIncomingRelationshipsByUri: function(uri, onSuccess, onFail) {
     var query = [
-      "SELECT DISTINCT ?relationship ?relationship_label ?property",
+      "SELECT (?relationship AS ?r) (?relationship_label AS ?rl) (?property AS ?p)",
       "WHERE {",
          "?property ?relationship <" + uri + "> .",
          "?property rdfs:label ?property_label .",
@@ -192,11 +192,11 @@ module.exports = {
       sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function(results) {
         // Format query
         var relationships = {};
-        results.results.bindings.map(function(r){
-          if(!relationships[r.property.value]) {
-            relationships[r.property.value] = {};
+        results.results.bindings.map(function(result){
+          if(!relationships[result.p.value]) {
+            relationships[result.p.value] = {};
           }
-          relationships[r.property.value][r.relationship_label.value] = r.relationship.value;
+          relationships[result.p.value][result.rl.value] = result.r.value;
         });
         onSuccess(relationships);
       }, onFail, true)

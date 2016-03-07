@@ -8,7 +8,6 @@ module.exports = function(data) {
     var graph       = { data: data.graph },
         config      = data.config,
         selected    = {},
-        hovered     = null,
         highlighted = null,
         isIE        = false,
         container   = '#graph';
@@ -150,7 +149,6 @@ module.exports = function(data) {
             .attr('width' , graph.width  + graph.margin.left + graph.margin.right)
             .attr('height', graph.height + graph.margin.top  + graph.margin.bottom)
             .call(d3.behavior.zoom().on("zoom", function () {
-              if(hovered) return;
               d3.select('#graph > svg > g').attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
             }))
           .append('g')
@@ -200,45 +198,6 @@ module.exports = function(data) {
           .enter().append('line')
             .attr('class', 'link');
 
-        graph.draggedThreshold = d3.scale.linear()
-            .domain([0, 0.1])
-            .range([5, 20])
-            .clamp(true);
-
-        function dragged(d) {
-            var threshold = graph.draggedThreshold(graph.force.alpha()),
-                dx        = d.oldX - d.px,
-                dy        = d.oldY - d.py;
-            if (Math.abs(dx) >= threshold || Math.abs(dy) >= threshold) {
-                d.dragged = true;
-            }
-            return d.dragged;
-        }
-
-        graph.drag = d3.behavior.drag()
-            .origin(function(d) { return d; })
-            .on('dragstart', function(d) {
-                d.oldX    = d.x;
-                d.oldY    = d.y;
-                d.dragged = false;
-                d.fixed |= 2;
-            })
-            .on('drag', function(d) {
-                d.px = d3.event.x;
-                d.py = d3.event.y;
-                if (dragged(d)) {
-                    if (!graph.force.alpha()) {
-                        graph.force.alpha(.025);
-                    }
-                }
-            })
-            .on('dragend', function(d) {
-                if (!dragged(d)) {
-                    selectObject(d, this);
-                }
-                d.fixed &= ~6;
-            });
-
         $('#graph-container').on('click', function(e) {
             if (!$(e.target).closest('.node').length) {
                 deselectObject();
@@ -249,29 +208,9 @@ module.exports = function(data) {
             .data(graph.force.nodes())
           .enter().append('g')
             .attr('class', 'node')
-            .call(graph.drag)
-            .on('mouseover', function(d) {
-                if (!selected.obj) {
-                    if (graph.mouseoutTimeout) {
-                        clearTimeout(graph.mouseoutTimeout);
-                        graph.mouseoutTimeout = null;
-                    }
-                    hovered = d;
-                    highlightObject(d);
-                }
+            .on('click', function(d) {
+              selectObject(d, this);
             })
-            .on('mouseout', function() {
-                if (!selected.obj) {
-                    if (graph.mouseoutTimeout) {
-                        clearTimeout(graph.mouseoutTimeout);
-                        graph.mouseoutTimeout = null;
-                    }
-                    graph.mouseoutTimeout = setTimeout(function() {
-                        hovered = null;
-                        highlightObject(null);
-                    }, 300);
-                }
-            });
 
         graph.nodeRect = graph.node.append('rect')
             .attr('rx', 5)
@@ -368,6 +307,7 @@ module.exports = function(data) {
             for (var k=0;(graph.force.alpha() > 1e-2) && (k < 150); k++) {
                 graph.force.tick();
             }
+            graph.force.stop();
             $('#graph-container').css('visibility', 'visible');
         });
     }
@@ -532,33 +472,33 @@ module.exports = function(data) {
         highlightObject(obj);
 
         node.classed('selected', true);
-        $('#docs').html(obj.docs);
-        $('#docs-container').scrollTop(0);
+        // $('#docs').html(obj.docs);
+        // $('#docs-container').scrollTop(0);
         resize(true);
 
-        var $graph   = $('#graph-container'),
-            nodeRect = {
-                left   : obj.x + obj.extent.left + graph.margin.left,
-                top    : obj.y + obj.extent.top  + graph.margin.top,
-                width  : obj.extent.right  - obj.extent.left,
-                height : obj.extent.bottom - obj.extent.top
-            },
-            graphRect = {
-                left   : $graph.scrollLeft(),
-                top    : $graph.scrollTop(),
-                width  : $graph.width(),
-                height : $graph.height()
-            };
-        if (nodeRect.left < graphRect.left ||
-            nodeRect.top  < graphRect.top  ||
-            nodeRect.left + nodeRect.width  > graphRect.left + graphRect.width ||
-            nodeRect.top  + nodeRect.height > graphRect.top  + graphRect.height) {
-
-            $graph.animate({
-                scrollLeft : nodeRect.left + nodeRect.width  / 2 - graphRect.width  / 2,
-                scrollTop  : nodeRect.top  + nodeRect.height / 2 - graphRect.height / 2
-            }, 500);
-        }
+        // var $graph   = $('#graph-container'),
+        //     nodeRect = {
+        //         left   : obj.x + obj.extent.left + graph.margin.left,
+        //         top    : obj.y + obj.extent.top  + graph.margin.top,
+        //         width  : obj.extent.right  - obj.extent.left,
+        //         height : obj.extent.bottom - obj.extent.top
+        //     },
+        //     graphRect = {
+        //         left   : $graph.scrollLeft(),
+        //         top    : $graph.scrollTop(),
+        //         width  : $graph.width(),
+        //         height : $graph.height()
+        //     };
+        // if (nodeRect.left < graphRect.left ||
+        //     nodeRect.top  < graphRect.top  ||
+        //     nodeRect.left + nodeRect.width  > graphRect.left + graphRect.width ||
+        //     nodeRect.top  + nodeRect.height > graphRect.top  + graphRect.height) {
+        //
+        //     $graph.animate({
+        //         scrollLeft : nodeRect.left + nodeRect.width  / 2 - graphRect.width  / 2,
+        //         scrollTop  : nodeRect.top  + nodeRect.height / 2 - graphRect.height / 2
+        //     }, 500);
+        // }
     }
 
     function deselectObject(doResize) {
@@ -575,8 +515,8 @@ module.exports = function(data) {
             if (obj !== highlighted) {
                 graph.node.classed('inactive', function(d) {
                     return (obj !== d
-                         && d.depends.indexOf(obj.name) == -1
-                         && d.dependedOnBy.indexOf(obj.name) == -1);
+                         && d.depends.indexOf(obj.uri) == -1
+                         && d.dependedOnBy.indexOf(obj.uri) == -1);
                 });
                 graph.line.classed('inactive', function(d) {
                     return (obj !== d.source && obj !== d.target);

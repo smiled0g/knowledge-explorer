@@ -90,6 +90,7 @@ var Knowledge = {
     var node =
     {
       "name": nodeName,
+      "uri": uri,
       "type": "group3",
       "depends": [],
       "dependedOnBy": [],

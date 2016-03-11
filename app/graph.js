@@ -231,12 +231,26 @@ module.exports = function(data) {
                 ddy   = 1.1,
                 dy    = -ddy * lines.length / 2 + .5;
 
+            // Populate node's heat by log of degree of the node
+            d.heat = Math.log(d.depends.length + d.dependedOnBy.length)/Math.log(10);
+
             lines.forEach(function(line) {
                 var text = node.append('text')
                     .text(line)
                     .attr('dy', dy + 'em');
                 dy += ddy;
             });
+        });
+
+
+        // Calculate max heat for normalizing heatmap color
+        var maxHeat = 0;
+        graph.node.each(function(d) {
+          maxHeat = d.heat > maxHeat ? d.heat : maxHeat;
+        });
+        // Assign color to node with normalized heatmap
+        graph.node.each(function(d) {
+          d3.select(this).select('rect').attr("fill", heatMapColorforValue(d.heat/maxHeat));
         });
 
         setTimeout(function() {
@@ -310,6 +324,11 @@ module.exports = function(data) {
             graph.force.stop();
             $('#graph-container').css('visibility', 'visible');
         });
+    }
+
+    function heatMapColorforValue(value){
+      var h = (1.0 - value) * 240
+      return d3.hsl("hsl(" + h + ", 100%, 50%)").brighter(1.5).toString();
     }
 
     var maxLineChars = 26,

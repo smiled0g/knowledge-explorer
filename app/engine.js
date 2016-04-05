@@ -146,35 +146,27 @@ var handleSearchByOntology = function(keyword, ontology) {
 }
 
 // Use BFS to grow the graph from certain node
-var handleGrow = function(keyword, limit) {
-  keyword = keyword.replace(/\W/g, '')
-
-  var rootUri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
-      growQueue = [rootUri],
-      addedUri = {},
-      limit = limit || 10;
-      amountToGrow = limit;
+var handleGrow = function(keyword, keyword2, limit) {
 
   // Add particular uri to grow queue
-  var addUriToQueue = function(uri) {
+  var addUriToQueue = function(uri, queue) {
     // Avoid adding same resource twice
-    if(!addedUri[uri]) {
-      addedUri[uri] = true;
-
-      growQueue.push(uri);
+    if(!queue.added[uri]) {
+      queue.added[uri] = true;
+      queue.queue.push(uri);
     }
   };
 
   // Add relationships from uri to queue
-  var addRelationshipsFromUriToQueue = function(uri) {
+  var addRelationshipsFromUriToQueue = function(uri, queue) {
     // Loop through all relationship and add to queue if they're not already added
     Object.keys(SearchStorage.get(uri).relationships).map(function(neighbor_uri){
-      addUriToQueue(neighbor_uri);
+      addUriToQueue(neighbor_uri, queue);
     });
   }
 
   // Find and add incoming relationships from uri to queue
-  var addIncomingRelationshipsFromUriToQueue = function(uri, callback) {
+  var addIncomingRelationshipsFromUriToQueue = function(uri, queue, callback) {
     // Search for incoming relatioship
     DBPedia.getIncomingRelationshipsByUri(uri, function(incoming_relationships) {
       // A dictionary that holds frequency of relatioship types
@@ -200,10 +192,12 @@ var handleGrow = function(keyword, limit) {
         };
 
 
-        addUriToQueue(incoming_uri);
+        addUriToQueue(incoming_uri, queue);
       });
 
-      callback();
+      if (callback) {
+        callback(queue);
+      }
     });
   }
 
@@ -215,16 +209,43 @@ var handleGrow = function(keyword, limit) {
 
   // Function that handle selecting what node in queue to grow next, and pop that from the queue
   // TODO: Add heuristic that helps growing better than BFS
-  var popQueue = function() {
-    if(growQueue.length > 0) {
-      return growQueue.shift();
+  var popQueue = function(queue) {
+    if(queue.queue.length > 0) {
+      // Handle duel growth
+      if (typeof secondQueue !== 'undefined') {
+        if (queue == firstQueue) {
+          var otherQueue = secondQueue
+        } else {
+          var otherQueue = firstQueue
+        }
+        for (i = 0; i < queue.queue.length; ++i) {
+          uri = queue.queue[i]
+          if (otherQueue.added[uri]) {
+            queue.queue.splice(i, 1)
+            return uri
+          }
+          return queue.queue.shift();
+        }
+      } else {  
+        return queue.queue.shift();
+      }
     } else {
       return null;
     }
   }
 
-  var processNextUriOnQueue = function() {
-    if(amountToGrow === 0 || growQueue.length === 0) {
+  var processNextUriOnQueue = function(queue) {
+
+    // If doing duel growth, swap queues
+    if (typeof secondQueue !== 'undefined') {
+      if (queue == firstQueue) {
+        queue = secondQueue
+      } else {
+        queue = firstQueue
+      }
+    }
+
+    if (amountToGrow === 0 || queue.queue.length === 0) {
       onFinish();
       return;
     }
@@ -232,14 +253,14 @@ var handleGrow = function(keyword, limit) {
     onProgress((limit-amountToGrow)*100.0/limit);
 
     // Get next URI to process
-    var uri = popQueue();
+    var uri = popQueue(queue);
 
     // DEBUG
     // console.log(uri);
 
     // If the resource is currently in the graph, skip it
     if(Knowledge.getGraph().graph[uri]) {
-      processNextUriOnQueue();
+      processNextUriOnQueue(queue);
       return;
     }
 
@@ -249,13 +270,13 @@ var handleGrow = function(keyword, limit) {
     //   otherwise, fetch the resource data and add to graph
     if(SearchStorage.get(uri)) {
       handleAddResourceToGraph(uri, false);
-      addRelationshipsFromUriToQueue(uri);
-      processNextUriOnQueue();
+      addRelationshipsFromUriToQueue(uri, queue);
+      processNextUriOnQueue(queue);
     } else {
       // Search for English abstract
       DBPedia.getAbstractByUriAndLanguage(uri, 'en', function(abstract_result) {       // If abstract not found on the uri, move on
         if(abstract_result.results.bindings.length === 0)  {
-          processNextUriOnQueue();
+          processNextUriOnQueue(queue);
         } else {
           // Fetch relationship
           DBPedia.getRelationshipsByUri(uri, function(relationships){
@@ -284,9 +305,9 @@ var handleGrow = function(keyword, limit) {
               // Add resource to graph
               handleAddResourceToGraph(uri, false);
               // Add outgoing relationships to grow queue
-              addRelationshipsFromUriToQueue(uri);
+              addRelationshipsFromUriToQueue(uri, queue);
               // Add incoming relationships to grow queue
-              addIncomingRelationshipsFromUriToQueue(uri, processNextUriOnQueue);
+              addIncomingRelationshipsFromUriToQueue(uri, queue, processNextUriOnQueue);
             });
           });
         }
@@ -302,9 +323,27 @@ var handleGrow = function(keyword, limit) {
     }
   );
 
+  var keyword = keyword.replace(/\W/g, '')
+      firstRootUri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword),
+      firstQueue = { queue: [], added: {} }
+      addUriToQueue(firstRootUri, firstQueue)
+      limit = limit || 10;
+      amountToGrow = limit;
+
+  // If a second keyword exists, initalize second queue
+  if (keyword2) {
+    var keyword2 = keyword2.replace(/\W/g, '')
+        secondRootUri = Knowledge.getUriFromRefOrName(keyword2) || SearchStorage.getUriFromName(keyword2),
+        secondQueue = { queue: [], added: {} }
+        addUriToQueue(secondRootUri, secondQueue)
+
+    addRelationshipsFromUriToQueue(secondRootUri, secondQueue);
+    addIncomingRelationshipsFromUriToQueue(secondRootUri, secondQueue);
+  }
+
   // Add initial URI to grow from root's relationships
-  addRelationshipsFromUriToQueue(rootUri);
-  addIncomingRelationshipsFromUriToQueue(rootUri, processNextUriOnQueue);
+  addRelationshipsFromUriToQueue(firstRootUri, firstQueue);
+  addIncomingRelationshipsFromUriToQueue(firstRootUri, firstQueue, processNextUriOnQueue);
 }
 
 var handleLink = function(r1, r2) {
@@ -364,7 +403,7 @@ var commands = {
       showVoiceAndConsoleResponse('Imported AIMind from ' + path);
     });
   },
-  'Grow *keyword (for *limit)': handleGrow
+  'Grow *keyword *keyword2 (for *limit)': handleGrow
 };
 
 

@@ -23,6 +23,17 @@ var Console = {
             this.processInput(command, this.commandsList);
         }
     }.bind(this));
+
+    // Receive the command from the menu bar
+    $("#search").keyup(function (e) {
+        if (e.keyCode == 13) {
+            // Command received
+            var command = $("#search").val();
+            $("#search").val('');
+            this.showInput(command);
+            this.processInput(command, this.commandsList);
+        }
+    }.bind(this));
   },
 
   // Display user's input on chatbox

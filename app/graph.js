@@ -518,6 +518,7 @@ module.exports = function(data) {
         //         scrollTop  : nodeRect.top  + nodeRect.height / 2 - graphRect.height / 2
         //     }, 500);
         // }
+
     }
 
     function deselectObject(doResize) {

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet' type='text/css'>
     <link href='http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/svg.css">
   </head>
@@ -47,7 +48,7 @@ Imports an AIMind XML file
 Exports the current state as an AIMind XML file
           </pre>
         </div>
-      </div>
+      </div>  
       <div id="query-container">
         <input type="text" id="query" placeholder="Type your query here"/>
       </div>
@@ -58,7 +59,19 @@ Exports the current state as an AIMind XML file
       </div>
     </div>
     <div id="graph-container">
-      <div id="graph"></div>
+      <ul id="menu-bar">
+        <li class="left">
+          <div class="box">
+            <div class="menu">
+                <input type="text" id="search" placeholder="Type your query here" /></i>
+            </div>
+          </div>
+        </li>
+        <li id="exp" class="bar" style="float:right"><a>Export XML</a></li>
+        <li id="imp" class="bar" style="float:right"><a>Import XML</a></li>
+      </ul>
+      <div id="graph"></div>   
+
     </div>
 
 
@@ -84,6 +97,22 @@ Exports the current state as an AIMind XML file
         var Engine = require('./app/engine');
         Engine.run(data);
       });
+
+      $("#exp").click(function(){
+        var AIMind = require('./app/aimind');
+        AIMind.export(function(path) {
+          showVoiceAndConsoleResponse('Exported AIMind to ' + path);
+        });
+      });
+
+      $("#imp").click(function(){
+        var AIMind = require('./app/aimind');
+        AIMind.import(function(path) {
+          showVoiceAndConsoleResponse('Imported AIMind from ' + path);
+        });
+      });
+
     </script>
+
   </body>
 </html>

@@ -25,31 +25,34 @@ p {
 }
 
 #menu-bar {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background-color: #333;
+  /* Temporarily remove menubar for IBM Demo */
+  display: none;
+
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
 }
 
 .left {
-    float: left;
+  float: left;
 }
 
 .bar a {
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
 }
 
 .bar a:hover:not(.active) {
-    background-color: #111;
+  background-color: #111;
 }
 
 .active {
-    background-color: #4CAF50;
+  background-color: #4CAF50;
 }
 
 * {
@@ -274,7 +277,7 @@ button.search {
   white-space: nowrap;
   position: relative;
 }
- 
+
 .menu input#search{
   width: 300px;
   height: 50px;
@@ -294,17 +297,17 @@ button.search {
 .menu input#search::-webkit-input-placeholder {
    color: #65737e;
 }
- 
+
 .menu input#search:-moz-placeholder { // Firefox 18-
-   color: #65737e;  
+   color: #65737e;
 }
- 
+
 .menu input#search::-moz-placeholder {  // Firefox 19+
-   color: #65737e;  
+   color: #65737e;
 }
- 
-.menu input#search:-ms-input-placeholder {  
-   color: #65737e;  
+
+.menu input#search:-ms-input-placeholder {
+   color: #65737e;
 }
 
 .menu .icon{
@@ -314,7 +317,7 @@ button.search {
   margin-top: 17px;
   z-index: 1;
   color: #4f5b66;
- 
+
    -webkit-transition: all .55s ease;
   -moz-transition: all .55s ease;
   -ms-transition: all .55s ease;
@@ -326,14 +329,14 @@ button.search {
     outline:none;
     background-color: #111;
 }
- 
+
 .menu:hover .icon{
   margin-top: 16px;
   color: #93a2ad;
- 
+
   -webkit-transform:scale(1.5); // Safari and Chrome
   -moz-transform:scale(1.5); // Firefox
   -ms-transform:scale(1.5); // IE 9
   -o-transform:scale(1.5); // Opera
    transform:scale(1.5);
-} 
+}

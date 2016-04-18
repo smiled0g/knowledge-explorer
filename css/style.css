@@ -164,6 +164,10 @@ p {
   transition: width 300ms;
 }
 
+.infobox {
+  width: auto !important;
+}
+
 .infobox th[scope="row"] {
   text-align: right;
   padding-right: 10px;

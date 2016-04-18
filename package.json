@@ -6,9 +6,11 @@
     "start": "npm install && ./node_modules/.bin/electron ."
   },
   "dependencies": {
+    "body-parser": "^1.15.0",
     "crypto": "0.0.3",
     "d3": "^3.5.12",
     "dropzone": "^4.2.0",
+    "express": "^4.13.4",
     "jquery": "^2.1.4",
     "node-persist": "0.0.8",
     "querystring": "^0.2.0",

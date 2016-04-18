@@ -1,13 +1,16 @@
 var DBPedia = require('./dbpedia'),
+    Graph = require('./graph'),
     Voice = require('./voice'),
     Console = require('./console'),
     Knowledge = require('./knowledge'),
     SearchStorage = require('./search-storage'),
-    AIMind = require('./aimind');
+    AIMind = require('./aimind'),
+    HttpServer = require('./http-server'),
+    Analogy = require('./analogy');
 
 var run = function(data) {
-  var Graph = require('./graph');
-  Graph(Knowledge.getGraph()).run();
+  Graph.init(Knowledge.getGraph());
+  Graph.run();
 
   Voice.listen(commands);
   // Disable voice command by default
@@ -91,13 +94,14 @@ var handleSearchByKeyword = function(keyword) {
               zh_abstract = zh_result.results.bindings[0].abs.value,
               zh_label = zh_result.results.bindings[0].name.value;
             }
+            var zh_speak = zh_abstract.split("。")[0];
             SearchStorage.add({
               uri: results[0].uri,
               label: results[0].label,
               zh_label: zh_label,
               description: formatted_description,
               speak: first_sentence,
-              zh_speak: zh_abstract,
+              zh_speak: zh_speak,
               relationships: relationships
             });
           });
@@ -226,7 +230,7 @@ var handleGrow = function(keyword, keyword2, limit) {
           }
           return queue.queue.shift();
         }
-      } else {  
+      } else {
         return queue.queue.shift();
       }
     } else {
@@ -369,6 +373,14 @@ var handleRemove = function(r) {
   Knowledge.removeNode(uri, true)
 }
 
+var handleMakeAnalogy = function(keyword) {
+  var keyword = keyword.replace(/\W/g, '')
+      nodeUri = Knowledge.getUriFromRefOrName(keyword),
+      nodeRef = Knowledge.getRefFromUri(nodeUri);
+
+  Analogy.makeAnalogyForNode(nodeRef);
+}
+
 var commands = {
   '(hi) (hello) jimmy': function() {
     showVoiceAndConsoleResponse('I\'m here!');
@@ -403,7 +415,10 @@ var commands = {
       showVoiceAndConsoleResponse('Imported AIMind from ' + path);
     });
   },
-  'Grow *keyword *keyword2 (for *limit)': handleGrow
+  'Grow *keyword *keyword2 (for *limit)': handleGrow,
+  'Analogy (for) *keyword': handleMakeAnalogy,
+  'Start server': HttpServer.start,
+  'Stop server': HttpServer.stop
 };
 
 

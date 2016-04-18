@@ -2,3 +2,4 @@
 node_modules
 persist
 *.xml
+npm-debug.log

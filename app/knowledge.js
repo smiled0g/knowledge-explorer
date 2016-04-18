@@ -71,6 +71,15 @@ var Knowledge = {
     }
   },
 
+  // Return resource's ref from that resource's uri
+  getRefFromUri: function(uri) {
+    var refs = this.getGraph().refs;
+    for(var i in refs) {
+      if(refs[i] === uri) return i;
+    }
+    return undefined;
+  },
+
   // Return resource's uri from that resource's reference number or name
   getUriFromRefOrName: function(str) {
     if(parseInt(str)) {

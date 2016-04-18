@@ -214,6 +214,36 @@ module.exports = {
     );
   },
 
+  // Fetch incoming relationships of a resource with given uri
+  getTypeByUri: function(uri, onSuccess, onFail) {
+    var query = [
+      "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+      "SELECT DISTINCT (?type_label AS ?tl) (?type AS ?t)",
+      "WHERE {",
+         "<" + uri + "> rdf:type ?type .",
+         "?type rdfs:label ?type_label .",
+         "FILTER regex(?type,'dbpedia.org','i')",
+         "FILTER (langMatches(lang(?type_label),'en')).",
+      "}"
+    ].join(" ");
+
+    // Hack for delaying queries
+    enqueueQuery (
+      // Execute query
+      sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function(results) {
+        // Format query
+        var types = results;
+        // results.results.bindings.map(function(result){
+        //   if(!relationships[result.p.value]) {
+        //     relationships[result.p.value] = {};
+        //   }
+        //   relationships[result.p.value][result.rl.value] = result.r.value;
+        // });
+        onSuccess(types);
+      }, onFail, true)
+    );
+  },
+
   // Fetch Wikipedia's infobox widget
   getInfobox: function(page, onSuccess, onFail) {
     $.ajax({

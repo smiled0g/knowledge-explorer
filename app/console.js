@@ -46,7 +46,7 @@ var Console = {
   // Display engine's text response on chatbox
   showResponse: function(response, option) {
     var item = $('<div class="response"></div>');
-    item.text(response);
+    item.html(response);
     if(option) {
       if(option.add) {
         var addButton = $('<button class="add">Add to graph <i class="ion ion-plus"></i></button>');

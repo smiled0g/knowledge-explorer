@@ -175,8 +175,8 @@ var _import = function() {
 }
 
 
-// Export an AIMind XML file
-var _export = function(callback) {
+// Generate XML string for export
+var generateXMLString = function() {
   var builder = new xml2js.Builder( {rootName: "AIMind"} ),
       graph = Knowledge.getGraph();
 
@@ -213,13 +213,20 @@ var _export = function(callback) {
   });
 
   // Build features JSON object into XML
-  var xml = builder.buildObject(aimind);
+  var xml = pd.xml(builder.buildObject(aimind));
+
+  return xml;
+};
+
+// Export an AIMind XML file
+var _export = function(callback) {
+  var xml = generateXMLString();
 
   dialog.showSaveDialog(
     { title: 'Export to AIMind XML' },
     function(path) {
       // Write to file
-      fs.writeFile(path, pd.xml(xml), function(err) {
+      fs.writeFile(path, xml, function(err) {
           if(err) {
               return console.log(err);
           }
@@ -231,5 +238,6 @@ var _export = function(callback) {
 
 module.exports = {
     import: _import,
-    export: _export
+    export: _export,
+    generateXMLString: generateXMLString
 }

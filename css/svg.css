@@ -16,6 +16,21 @@ marker#end {
     stroke-width: 1.5px;
 }
 
+.node.analogy-source rect {
+  stroke-width: 3px;
+  stroke: #3498db;
+}
+
+.node.analogy-target rect {
+  stroke-width: 3px;
+  stroke: #e74c3c;
+}
+
+.node.analogy-connection rect {
+  stroke-width: 3px;
+  stroke: #e6e9ea;
+}
+
 .node text {
     fill: #000;
     font-size: 13px;
@@ -30,7 +45,7 @@ marker#end {
 .link.inactive,
 .node.inactive rect,
 .node.inactive text {
-    opacity: .15;
+    opacity: .1;
 }
 
 .node.inactive.selected rect,

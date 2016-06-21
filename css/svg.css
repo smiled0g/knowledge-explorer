@@ -26,9 +26,14 @@ marker#end {
   stroke: #e74c3c;
 }
 
-.node.analogy-connection rect {
+.link.analogy-src-link {
   stroke-width: 3px;
-  stroke: #e6e9ea;
+  stroke: #3498db;
+}
+
+.link.analogy-trg-link {
+  stroke-width: 3px;
+  stroke: #e74c3c;
 }
 
 .node text {

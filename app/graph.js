@@ -203,7 +203,7 @@ function drawGraph() {
 
     $('#graph-container').on('click', function(e) {
         if (!$(e.target).closest('.node').length) {
-            deselectObject();
+            //deselectObject();
         }
     });
 
@@ -533,7 +533,8 @@ function deselectObject(doResize) {
     graph.line.classed('inactive', false);
     graph.node.classed('analogy-source', false);
     graph.node.classed('analogy-target', false);
-    graph.node.classed('analogy-connection', false);
+    graph.line.classed('analogy-src-link', false);
+	graph.line.classed('analogy-trg-link', false);
 }
 
 function highlightObject(obj) {
@@ -571,44 +572,44 @@ function resize() {
 function highlightAnalogy(analogy) {
   deselectObject();
   // Build dict of nodes in evidences
-  var node_in_evidences = {};
+  var src_evidence = {};
+  var trg_evidence = {};
   analogy.evidence.map(function(pair){
-    node_in_evidences[pair[0]] = true;
-    node_in_evidences[pair[1]] = true;
+    src_evidence[pair[0]] = true;
+    trg_evidence[pair[1]] = true;
   });
   window.xxx = analogy;
-  window.yyy = node_in_evidences;
+  window.yyy = src_evidence;
+  //window.yyy = node_in_evidences;
   // Process and show response from analogy server
   graph.node.classed('analogy-source', function(d) {
     if(d.ref == analogy.source) return true;
-    return false
+    return false;
   });
   graph.node.classed('analogy-target', function(d) {
     if(d.ref == analogy.target) return true;
-    return false
-  });
-  graph.node.classed('analogy-connection', function(d) {
-    if(analogy.connections.indexOf(String(d.ref)) >= 0) return true;
-    return false
+    return false;
   });
   graph.node.classed('inactive', function(d) {
     if(
       d.ref == analogy.source ||
       d.ref == analogy.target ||
-      analogy.connections.indexOf(String(d.ref)) >= 0 ||
-      node_in_evidences[String(d.ref)]
-    ) return false
-    return true
+      //analogy.connections.indexOf(String(d.ref)) >= 0 ||
+      src_evidence[String(d.ref)] || trg_evidence[String(d.ref)]
+    ) return false;
+    return true;
   });
   graph.line.classed('inactive', function(d) {
-    if(
-      // Show connections that matter
-      (
-        (d.source.ref == analogy.source || d.source.ref == analogy.target) &&
-        analogy.connections.indexOf(String(d.target.ref)) >= 0
-      )
-    ) return false
-    return true
+	if((d.source.ref == analogy.source || d.source.ref == analogy.target) && (src_evidence[String(d.target.ref)] || trg_evidence[String(d.target.ref)])) return false;
+    return true;
+  });
+  graph.line.classed('analogy-src-link', function(d){
+	  if(d.source.ref == analogy.source && src_evidence[String(d.target.ref)]) return true;
+	  return false;
+  });
+  graph.line.classed('analogy-trg-link', function(d){
+	  if(d.source.ref == analogy.target && trg_evidence[String(d.target.ref)]) return true;
+	  return false; 
   });
 }
 

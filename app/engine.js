@@ -12,16 +12,16 @@ var run = function(data) {
   Graph.init(Knowledge.getGraph());
   Graph.run();
 
-  Voice.listen(commands);
+  //Voice.listen(commands);
   // Disable voice command by default
-  Voice.pauseListening();
+  //Voice.pauseListening();
 
   var Console = require('./console');
   Console.initQueryInput(commands);
 }
 
 var showVoiceAndConsoleResponse = function(response, option) {
-  Voice.speak(response);
+  //Voice.speak(response);
   Console.showResponse(response, option);
 }
 
@@ -71,7 +71,7 @@ var handleSearchByKeyword = function(keyword) {
       DBPedia.getInfobox(results[0].uri.split('/').pop().trim(), function(data){
         var infobox = $('<div>'+data.replace(/\/\//g, 'https://')+'</div>').children('.infobox');
         if(infobox.length) {
-          Voice.speak(first_sentence);
+          //Voice.speak(first_sentence);
           showConsoleInfoboxResponse(infobox, {
             add: {
               uri: results[0].uri,
@@ -175,13 +175,15 @@ var handleGrow = function(keyword, keyword2, limit) {
     DBPedia.getIncomingRelationshipsByUri(uri, function(incoming_relationships) {
       // A dictionary that holds frequency of relatioship types
       //   it will be used to filter out some of the unwanted relatioships
-      var relationshipTypeFrequency = {};
+	  
+	  
+      /*var relationshipTypeFrequency = {};
       // Populate relatioshipTypeFrequency
       Object.keys(incoming_relationships).map(function(incoming_uri) {
         Object.keys(incoming_relationships[incoming_uri]).map(function(relationship_type) {
           relationshipTypeFrequency[relationship_type] = relationshipTypeFrequency[relationship_type]+1 || 1;
         });
-      });
+      });*/
 
       // Filter out some of the unwanted relatioships
       //   In this case, we are illiminating relatioship of types that appears too many times
@@ -190,10 +192,10 @@ var handleGrow = function(keyword, keyword2, limit) {
         if( incoming_relationships[incoming_uri]['Wikipage redirect'] ||
             incoming_relationships[incoming_uri]['Wikipage disambiguates']) return;
 
-        var relationshipTypeFrequencyThreshold = 10;
+        /*var relationshipTypeFrequencyThreshold = 10;
         for(var relationship_type in incoming_relationships[incoming_uri]) {
           if(relationshipTypeFrequency[relationship_type] > relationshipTypeFrequencyThreshold) return;
-        };
+        };*/
 
 
         addUriToQueue(incoming_uri, queue);

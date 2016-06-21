@@ -153,7 +153,7 @@ function drawGraph() {
         .attr('height', graph.height + graph.margin.top  + graph.margin.bottom)
         .call(d3.behavior.zoom().on("zoom", function () {
           d3.select('#graph > svg > g').attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-        }))
+        })).on("dblclick.zoom", null) //disable double click zoom
       .append('g')
         .attr('transform', 'translate(' + graph.margin.left + ',' + graph.margin.top + ')');
 
@@ -201,11 +201,11 @@ function drawGraph() {
       .enter().append('line')
         .attr('class', 'link');
 
-    $('#graph-container').on('click', function(e) {
+    /*$('#graph-container').on('click', function(e) {
         if (!$(e.target).closest('.node').length) {
             //deselectObject();
         }
-    });
+    });*/
 
     graph.node = graph.svg.selectAll('.node')
         .data(graph.force.nodes())
@@ -524,6 +524,7 @@ function selectObject(obj, el) {
 }
 
 function deselectObject(doResize) {
+	highlighted = undefined
     if (doResize || typeof doResize == 'undefined') {
         resize(false);
     }

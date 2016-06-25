@@ -70,11 +70,11 @@ var importFeatureWithURI = function (feature, counter) {
 						});
 						handleAddResourceToGraph(uri);
 						counter();
-					});
-				});
-			});
+					},counter);
+				},counter);
+			},counter);
 			/*}*/
-		});
+		},counter);
 	}
 }
 

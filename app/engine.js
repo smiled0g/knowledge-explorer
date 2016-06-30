@@ -295,34 +295,40 @@ var handleGrow = function (keyword, keyword2, limit) {
 				} else {
 					// Fetch relationship
 					DBpedia.getRelationshipsByUri(uri, function (relationships) {
-						var abstrct = abstract_result.results.bindings[0].abs.value,
-						label = abstract_result.results.bindings[0].name.value,
-						formatted_description = DBpedia.getFormattedDescription(abstrct),
-						first_sentence = DBpedia.getFirstSentence(formatted_description);
-						// Fetch Chinese abstract
-						DBpedia.getAbstractByUriAndLanguage(uri, 'zh', function (zh_result) {
-							var zh_abstract = "",
-							zh_label = "";
-							if (zh_result.results.bindings.length > 0) {
-								zh_abstract = zh_result.results.bindings[0].abs.value,
-								zh_label = zh_result.results.bindings[0].name.value;
-							}
-							// Add search result to SearchStorage
-							SearchStorage.add({
-								uri : uri,
-								label : label,
-								zh_label : zh_label,
-								description : formatted_description,
-								speak : first_sentence,
-								zh_speak : zh_abstract,
-								relationships : relationships
+						DBpedia.getLocationByUri(uri, function (geodata) {
+							DBpedia.getTimeDataByUri(uri, function (timedata) {
+								var abstrct = abstract_result.results.bindings[0].abs.value,
+								label = abstract_result.results.bindings[0].name.value,
+								formatted_description = DBpedia.getFormattedDescription(abstrct),
+								first_sentence = DBpedia.getFirstSentence(formatted_description);
+								// Fetch Chinese abstract
+								DBpedia.getAbstractByUriAndLanguage(uri, 'zh', function (zh_result) {
+									var zh_abstract = "",
+									zh_label = "";
+									if (zh_result.results.bindings.length > 0) {
+										zh_abstract = zh_result.results.bindings[0].abs.value,
+										zh_label = zh_result.results.bindings[0].name.value;
+									}
+									// Add search result to SearchStorage
+									SearchStorage.add({
+										uri : uri,
+										label : label,
+										zh_label : zh_label,
+										description : formatted_description,
+										speak : first_sentence,
+										zh_speak : zh_abstract,
+										relationships : relationships,
+										geodata : geodata,
+										timedata : timedata
+									});
+									// Add resource to graph
+									handleAddResourceToGraph(uri, false);
+									// Add outgoing relationships to grow queue
+									addRelationshipsFromUriToQueue(uri, queue);
+									// Add incoming relationships to grow queue
+									addIncomingRelationshipsFromUriToQueue(uri, queue, processNextUriOnQueue);
+								});
 							});
-							// Add resource to graph
-							handleAddResourceToGraph(uri, false);
-							// Add outgoing relationships to grow queue
-							addRelationshipsFromUriToQueue(uri, queue);
-							// Add incoming relationships to grow queue
-							addIncomingRelationshipsFromUriToQueue(uri, queue, processNextUriOnQueue);
 						});
 					});
 				}

@@ -8,6 +8,10 @@ pd = require('./pretty-data').pd,
 xml2js = require('xml2js'),
 dialog = require('electron').remote.dialog;
 
+// Create mapping between id and uri
+var idToUriMap = {};
+var uriToIDMap = {};
+
 var handleAddResourceToGraph = function (uri) {
 	var searchResult = SearchStorage.get(uri);
 
@@ -17,7 +21,8 @@ var handleAddResourceToGraph = function (uri) {
 		searchResult.relationships,
 		searchResult.geodata,
 		searchResult.timedata,
-		false);
+		false,
+		uriToIDMap[searchResult.uri]);
 }
 
 var importFeatureWithURI = function (feature, counter) {
@@ -32,6 +37,7 @@ var importFeatureWithURI = function (feature, counter) {
 	//   otherwise, fetch the resource data and add to graph
 	if (SearchStorage.get(uri)) {
 		handleAddResourceToGraph(uri);
+		counter();
 	} else {
 		//disabling abstract because the sentences are wonky... description is better... don't know more direct method besides search
 		/*DBpedia.getAbstractByUriAndLanguage(uri, 'en', function (abstract_result) { */
@@ -160,15 +166,13 @@ var _import = function () {
 					onProgress = progressListener;
 				});
 
-				// Create mapping between id and uri
-				var idToUriMap = {};
+				
 				result.AIMind.Features[0].Feature.map(function (feature) {
 					var uri = feature.$.uri || ('#' + feature.$.data);
 					console.log(uri);
 					idToUriMap[feature.$.id] = uri;
+					uriToIDMap[uri] = feature.$.id;
 				});
-
-				console.log(idToUriMap);
 
 				// Import each feature
 				result.AIMind.Features[0].Feature.map(function (feature) {
@@ -206,7 +210,7 @@ var generateXMLString = function () {
 	var aimind = {
 		Root : {
 			$ : {
-				id : '0'
+				id : '1'
 			}
 		},
 		Features : {

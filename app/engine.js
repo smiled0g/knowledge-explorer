@@ -6,7 +6,9 @@ Knowledge = require('./knowledge'),
 SearchStorage = require('./search-storage'),
 AIMind = require('./aimind'),
 HttpServer = require('./http-server'),
-Analogy = require('./analogy');
+Analogy = require('./analogy'),
+Narration = require('./narrativebackend'),
+Interest = require('./userinterest');
 
 var run = function (data) {
 	Graph.init(Knowledge.getGraph());
@@ -349,7 +351,7 @@ var handleGrow = function (keyword, keyword2, limit) {
 		queue : [],
 		added : {}
 	}
-	addUriToQueue(firstRootUri, firstQueue)
+	addUriToQueue(firstRootUri, firstQueue);
 	limit = limit || 10;
 	amountToGrow = limit;
 
@@ -361,7 +363,7 @@ var handleGrow = function (keyword, keyword2, limit) {
 			queue : [],
 			added : {}
 		}
-		addUriToQueue(secondRootUri, secondQueue)
+		addUriToQueue(secondRootUri, secondQueue);
 
 		addRelationshipsFromUriToQueue(secondRootUri, secondQueue);
 		addIncomingRelationshipsFromUriToQueue(secondRootUri, secondQueue);
@@ -398,9 +400,39 @@ var handleRemove = function (r) {
 var handleMakeAnalogy = function (keyword) {
 	var keyword = keyword.replace(/\W/g, '')
 		nodeUri = Knowledge.getUriFromRefOrName(keyword),
-	nodeRef = Knowledge.getRefFromUri(nodeUri);
+		nodeRef = Knowledge.getRefFromUri(nodeUri);
 
 	Analogy.makeAnalogyForNode(nodeRef);
+}
+
+var handleDisplayUserInterestProfile = function(){
+	//display the user interest profile
+	Interest.showUserInterestProfile();
+}
+
+var showNodeOnGraph = function(keyword){
+	//highlight a specific node on the graph
+
+	var keyword = keyword.substring(5),
+		nodeUri = Knowledge.getUriFromRefOrName(keyword),
+		nodeRef = Knowledge.getRefFromUri(nodeUri);
+	
+	graph.graph.node.each(function (d) {
+		if (d.ref == nodeRef){
+			Graph.selectObject(d, this);
+		}
+	});	
+}
+
+var handleNarration = function(keyword){
+	//create a narration starting from the specified node
+	
+	var keyword = keyword.replace(/\W/g, '')
+		nodeUri = Knowledge.getUriFromRefOrName(keyword),
+		nodeRef = Knowledge.getRefFromUri(nodeUri);
+	
+	Narration.makeNarrationForNode(nodeRef);
+	
 }
 
 var commands = {
@@ -444,7 +476,10 @@ var commands = {
 	'Grow *keyword *keyword2 (for *limit)' : handleGrow,
 	'Analogy (for) *keyword' : handleMakeAnalogy,
 	'Start server' : HttpServer.start,
-	'Stop server' : HttpServer.stop
+	'Stop server' : HttpServer.stop,
+	'(Show) (Display) interest' : handleDisplayUserInterestProfile,
+	'Show *keyword' : showNodeOnGraph,
+	'Narrate *keyword' : handleNarration
 };
 
 module.exports = {

@@ -4,7 +4,8 @@
 var Console = require('./console'),
     Config = require('./config'),
     Graph = require('./graph'),
-    AIMind = require('./aimind');
+    AIMind = require('./aimind'),
+	Interest = require('./userinterest');
 
 var express = require('express'),
     bodyParser = require('body-parser'),
@@ -36,6 +37,16 @@ app.post('/callback/analogy', function(req, res) {
     Console.showResponse('I\'m sorry. No analogy can be made.');
   }
   res.status(200).send();
+});
+
+/*
+	Callback function for updating the user interest profile
+*/
+
+app.post('/callback/userinterest', function(req, res) {
+	//update the user interest profile
+	Interest.setInterestProfile(req.body);	
+	res.status(200).send();
 });
 
 /*

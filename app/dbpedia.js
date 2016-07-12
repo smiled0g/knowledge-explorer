@@ -49,11 +49,11 @@ function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
 	 */
 
 	// Try to fetch query result from cache first
-	var cachedResult = QueryCache.get(endpoint, queryStr);
+	/*var cachedResult = QueryCache.get(endpoint, queryStr);
 	if (cachedResult) {
 		onSuccess(cachedResult);
 		return;
-	}
+	}*/
 
 	// If cache not found, perform query
 	var querypart = "query=" + encodeURIComponent(queryStr);
@@ -79,7 +79,7 @@ function sparqlQueryJson(queryStr, endpoint, onSuccess, onFail, isDebug) {
 		if (xmlhttp.readyState == 4) {
 			if (xmlhttp.status == 200) {
 				// Cache result for further queries
-				QueryCache.set(endpoint, queryStr, $.parseJSON(xmlhttp.responseText));
+				//QueryCache.set(endpoint, queryStr, $.parseJSON(xmlhttp.responseText));
 				onSuccess($.parseJSON(xmlhttp.responseText));
 			} else {
 				onFail(xmlhttp.status, xmlhttp.responseText);

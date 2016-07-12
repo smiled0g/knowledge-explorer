@@ -637,5 +637,6 @@ module.exports = {
 			draw : drawGraph
 		}
 	},
-	highlightAnalogy : highlightAnalogy
+	highlightAnalogy : highlightAnalogy,
+	selectObject : selectObject
 }

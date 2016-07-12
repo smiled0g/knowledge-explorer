@@ -51,6 +51,11 @@ var importFeatureWithURI = function (feature, counter) {
 				abstrct = results[0].description;
 				label = results[0].label;
 			}
+			
+			if(abstrct === undefined || abstrct === null){
+				counter();
+				return;
+			}
 
 			// If abstract not found on the uri, move on
 			/*if (abstract_result.results.bindings.length === 0) {

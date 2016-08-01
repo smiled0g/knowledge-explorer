@@ -19,8 +19,6 @@ var handleAddResourceToGraph = function (uri) {
 		searchResult.uri,
 		searchResult.label,
 		searchResult.relationships,
-		searchResult.geodata,
-		searchResult.timedata,
 		false,
 		uriToIDMap[searchResult.uri]);
 }
@@ -39,53 +37,63 @@ var importFeatureWithURI = function (feature, counter) {
 		handleAddResourceToGraph(uri);
 		counter();
 	} else {
-		//disabling abstract because the sentences are wonky... description is better... don't know more direct method besides search
-		/*DBpedia.getAbstractByUriAndLanguage(uri, 'en', function (abstract_result) { */
-
-		DBpedia.searchByKeyword(feature.$.data, function (results) {
-			var abstrct, label;
-			if (results.length == 0 || results[0].label != feature.$.data) { //if not an exact match, use the existing description
-				abstrct = feature.speak[0];
-				label = feature.$.data;
-			} else {
-				abstrct = results[0].description;
-				label = results[0].label;
-			}
-			
-			if(abstrct === undefined || abstrct === null){
+		DBpedia.getAllData(uri, function(result){
+			if(result.description.length === 0){
 				counter();
 				return;
+			}else{
+				var formatted_description = DBpedia.getFormattedDescription(result.description);
+				var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
+				
+				SearchStorage.add({
+					uri : uri,
+					label : result.label,
+					description : formatted_description,
+					speak : first_sentence,
+					relationships : result.relationships,
+					geodata : result.geodata,
+					timedata : result.timedata,
+					thumbnail : result.thumbnail,
+					pictures : result.pictures
+				});
+				console.log(result);
+				handleAddResourceToGraph(uri);
+				counter();
 			}
-
-			// If abstract not found on the uri, move on
-			/*if (abstract_result.results.bindings.length === 0) {
-			counter();
-			return;
-			} else {*/
-			DBpedia.getRelationshipsByUri(uri, function (relationships) {
-				DBpedia.getLocationByUri(uri, function (geodata) {
-					DBpedia.getTimeDataByUri(uri, function (timedata) {
-						/*var abstrct = abstract_result.results.bindings[0].abs.value,
-						label = abstract_result.results.bindings[0].name.value,*/
-						
-						var formatted_description = DBpedia.getFormattedDescription(abstrct),
-						first_sentence = DBpedia.getFirstSentence(formatted_description);
-						SearchStorage.add({
-							uri : uri,
-							label : label,
-							description : formatted_description,
-							speak : first_sentence,
-							relationships : relationships,
-							geodata : geodata,
-							timedata : timedata
-						});
-						handleAddResourceToGraph(uri);
-						counter();
+		},counter);
+		
+		
+		
+		/*DBpedia.getAbstractByUriAndLanguage(uri, 'en', function (abstract_result) { 
+			if (abstract_result.results.bindings.length === 0) {
+				counter();
+				return;
+			} else {
+				DBpedia.getDescriptionByUriAndLanguage(uri, 'en', function(description){
+					var abstrct = abstract_result.results.bindings[0].abs.value,
+						label = abstract_result.results.bindings[0].name.value,
+						formatted_description = DBpedia.getFormattedDescription(abstrct),
+						first_sentence = description.results.bindings[0]['callret-0'].value || DBpedia.getFirstSentence(formatted_description);
+					DBpedia.getRelationshipsByUri(uri, function (relationships) {
+						DBpedia.getLocationByUri(uri, function (geodata) {
+							DBpedia.getTimeDataByUri(uri, function (timedata) {
+								SearchStorage.add({
+									uri : uri,
+									label : label,
+									description : formatted_description,
+									speak : first_sentence,
+									relationships : relationships,
+									geodata : geodata,
+									timedata : timedata
+								});
+								handleAddResourceToGraph(uri);
+								counter();
+							},counter);
+						},counter);
 					},counter);
 				},counter);
-			},counter);
-			/*}*/
-		},counter);
+			}
+		},counter);*/
 	}
 }
 
@@ -95,7 +103,7 @@ var importFeatureWithoutURI = function (feature, relationships, counter) {
 	SearchStorage.add({
 		uri : uri,
 		label : feature.$.data,
-		description : feature.speak,
+		description : feature.description,
 		speak : feature.speak,
 		relationships : relationships
 	});
@@ -141,7 +149,7 @@ var _import = function () {
 		title : 'Import from AIMind XML',
 		properties : ['openFile']
 	},
-		function (path) {
+	function (path) {
 		var parser = new xml2js.Parser({
 				normalizeTags : false
 			});
@@ -240,20 +248,26 @@ var generateXMLString = function () {
 			timedata : {
 				timeobj : []
 			},
+			pictures : {
+				picture : []
+			},
 			speak : '',
-			'zh-speak' : ''
+			'zh-speak' : '',
+			description : ''
 		};
 
 		sKey = SearchStorage.get(uri);
 
 		// Add a new feature into JSON object
 		feature.$.data = sKey.label;
-		feature.$['zh-data'] = sKey.zh_label || '';
+		feature['zh-data'] = sKey.zh_label || '';
 		feature.$.id = graph.graph[uri].ref;
 		feature.$.uri = uri;
-
+		
+		feature.description = sKey.description;
 		feature.speak = sKey.speak;
 		feature['zh-speak'] = sKey.zh_speak || '';
+		feature.thumbnail = sKey.thumbnail;
 
 		graph.graph[uri].dependedOnBy.map(function (neighbor_uri) {
 			var neighbor = {
@@ -272,8 +286,8 @@ var generateXMLString = function () {
 		gdat.map(function (latlon) {
 			var coordinates = {
 				$ : {
-					lat : latlon[0],
-					lon : latlon[1]
+					lat : latlon.lat,
+					lon : latlon.lon
 				}
 			}
 			feature.geodata.coordinates.push(coordinates);
@@ -283,11 +297,23 @@ var generateXMLString = function () {
 		tdat.map(function (data) {
 			var timeobj = {
 				$ : {
-					relationship : data[0],
-					value : data[1]
+					label : data.label,
+					value : data.value
 				}
 			}
 			feature.timedata.timeobj.push(timeobj);
+		});
+		
+		pdat = sKey.pictures || [];
+		pdat.map(function (data) {
+			console.log(data);
+			var picture = {
+				$ : {
+					url : data.url || '',
+					label : data.label || ''
+				}
+			}
+			feature.pictures.picture.push(picture);
 		});
 
 		aimind.Features.Feature.push(feature);

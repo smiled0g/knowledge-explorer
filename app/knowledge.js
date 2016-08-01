@@ -91,7 +91,7 @@ var Knowledge = {
 	},
 
 	// Add a node to knowledge graph
-	addNode : function (uri, name, relationships, geodata, timedata, redraw, explicitRef) {
+	addNode : function (uri, name, relationships, redraw, explicitRef) {
 		var graph = this.getGraph();
 		if (graph.graph[uri])
 			return false;
@@ -116,8 +116,6 @@ var Knowledge = {
 			"relationships" : relationships || [],
 			"ref" : ref,
 			"docs" : "",
-			"geodata" : geodata || [],
-			"timedata" : timedata || []
 		}
 
 		graph.refs[ref] = uri;

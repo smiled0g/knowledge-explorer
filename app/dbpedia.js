@@ -122,8 +122,20 @@ module.exports = {
 		].join(" ");
 
 		// Hack for delaying queries
-		enqueueQuery(
-			sparqlQueryJson.bind(this, query, this.sparqlEndpoint, onSuccess, onFail, true));
+		enqueueQuery(sparqlQueryJson.bind(this, query, this.sparqlEndpoint, onSuccess, onFail, true));
+	},
+	
+	getDescriptionByUriAndLanguage : function(uri, lang, onSuccess, onFail) {
+		var query = [
+			"select ?desc",
+			"where {",
+			"<" + uri + "> <http://www.w3.org/2000/01/rdf-schema#comment> ?desc",
+			"FILTER (langMatches(lang(?desc),'" + lang + "'))",
+			"}"		
+		].join(" ");
+		
+		// Hack for delaying queries
+		enqueueQuery(sparqlQueryJson.bind(this, query, this.sparqlEndpoint, onSuccess, onFail, true));
 	},
 
 	// Fetch properties of a particular type of a resource with given uri
@@ -247,10 +259,31 @@ module.exports = {
 		var query = [
 			"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>",
 			"PREFIX dbo: <http://dbpedia.org/ontology/>",
-			"SELECT * WHERE {",
+			"SELECT ?lat ?lon WHERE {",
 			"<" + uri + "> rdf:type dbo:Place ;",
 			"geo:lat ?lat ;",
-			"geo:long ?long .",
+			"geo:long ?lon .",
+			"}"
+		].join(" ");
+		
+		// Hack for delaying queries
+		enqueueQuery(
+			// Execute query
+			sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function (results) {
+				geodata = []
+				results.results.bindings.map(function (result) {
+					geodata.push([result.lat.value, result.lon.value])
+				});
+				onSuccess(geodata);
+			}, onFail, true));
+		
+	},
+	
+	/*getThumbnailByUri : function (uri, onSuccess, onFail){
+		var query = [
+			"PREFIX dbo: <http://dbpedia.org/ontology/>",
+			"SELECT ?thumbnail WHERE {",
+			"<" + uri + "> dbo:thumbnail ?thumbnail .",
 			"}"
 		].join(" ");
 		
@@ -264,8 +297,49 @@ module.exports = {
 				});
 				onSuccess(geodata);
 			}, onFail, true));
+	},*/
+	
+	getImagesByUri : function (uri, onSuccess, onFail, type_only){
 		
+		//default value
+		if (typeof(type_only)==='undefined') type_only = false;
+		
+		var query;
+		//find things with image property
+		if(type_only){
+			query = [
+				"PREFIX dbp: <http://dbpedia.org/property/>",
+				"SELECT ?img WHERE {",
+				"<" + uri + "> dbp:image ?img .",
+				"}"
+			].join(" ");
+		}
+		else{
+		//find things with image in name / also get thumbnail
+			query = [
+				"SELECT DISTINCT ?rl ?p ?tn WHERE {{",
+				"<" + uri + "> ?r ?p.",
+				"FILTER regex(?r, '(.*)image(.*)', 'i')",
+				"?r rdfs:label ?rl .",
+				"}UNION{",
+				"<" + uri + "> dbo:thumbnail ?tn.}}",
+			].join(" ");
+		}
+		
+		// Hack for delaying queries
+		enqueueQuery(
+			// Execute query
+			sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function (results) {
+				
+				//format: 
+				"https://en.wikipedia.org/wiki/File:Togato_con_tesa_dell%27imperatore_claudio,_inv._2221.JPG"
+				
+				console.log(results);
+				//onSuccess(results);
+			}, onFail, true));
 	},
+	
+	
 	
 	getTimeDataByUri : function(uri, onSuccess, onFail, type_only){
 		
@@ -308,6 +382,227 @@ module.exports = {
 				onSuccess(timedata);
 			}, onFail, true));
 	},
+	
+	getAllData : function(uri, onSuccess, onFail){
+		var query = [
+			"SELECT DISTINCT (?r as ?relationship) (?rl as ?relationship_label) (?p as ?property) (?rl2 as ?time_label) (?p2 as ?time_value) ?lat ?lon (?desc as ?description) (?abs as ?abstract) ?name ?thumbnail ?image_label ?image_value",
+			"WHERE {{",
+			"<" + uri + "> ?r ?p.",
+			"?p rdfs:label ?pl.",
+			"?r rdfs:label ?rl.",
+			"FILTER regex(?r,'dbpedia.org','i').",
+			"FILTER (langMatches(lang(?pl),'en')).",
+			"FILTER (langMatches(lang(?rl),'en')).",
+			"}UNION{",
+			"<" + uri + "> ?r2 ?p2.",
+			"FILTER regex(?r2, '(.*)date(.*)|(.*)year(.*)', 'i')",
+			"?r2 rdfs:label ?rl2 .",
+			"FILTER regex(?r2,'dbpedia.org','i')",
+			"FILTER (langMatches(lang(?rl2),'en')).",
+			"}UNION{",
+			"<" + uri + "> rdf:type dbo:Place ;",
+			"geo:lat ?lat ;",
+			"geo:long ?lon .",
+			"}UNION{",
+			"<" + uri + "> <http://www.w3.org/2000/01/rdf-schema#comment> ?desc",
+			"FILTER (langMatches(lang(?desc),'en'))",
+			"}UNION{",
+			"<" + uri + "> rdfs:label ?name.",
+			"<" + uri + "> dbo:abstract ?abs.",
+			"FILTER (langMatches(lang(?name),'en')).",
+			"FILTER (langMatches(lang(?abs),'en')).",
+			"}UNION{",
+			"<" + uri + "> dbo:thumbnail ?thumbnail.",
+			"}}"
+		].join(" ");
+	
+		// Hack for delaying queries
+		enqueueQuery(
+			// Execute query
+			sparqlQueryJson.bind(this, query, this.sparqlEndpoint, function (result) {
+				page = uri.split('/').pop().trim();
+				
+				https://en.wikipedia.org/wiki/Lazio
+				
+				$.getJSON(
+					"http://en.wikipedia.org/w/api.php?action=parse&format=json&callback=?",
+					{page:page, prop:"text"},
+					function(data) {
+						
+						var relationships = [];
+						var geodata = [];
+						var timedata = [];
+						var description = "";
+						var abstrct = "";
+						var thumbnail = "";
+						var pictures = [];
+						var label = "";
+						
+						html = data.parse.text['*'].replace(/img/g, 'noloadimg');
+						tmp = $(html);
+						tmp.find('.image noloadimg').each(function(){
+							var x = $(this);
+							var url = 'https:' + x.attr('src');
+							url = url.split('/').slice(0,9);//remove any thumbnail specs
+							url.splice(5,1);
+							pictures.push({
+								url : url.join('/'),
+								label : x.attr('alt')
+							});
+						});
+						
+						result.results.bindings.map(function(obj){
+							if(obj.property){
+								if (!relationships[obj.property.value]) {
+									relationships[obj.property.value] = {};
+								}
+								relationships[obj.property.value][obj.relationship_label.value] = obj.relationship.value;
+							}
+							else if(obj.time_label){
+								timedata.push({label:obj.time_label.value, value:obj.time_value.value});
+							}
+							else if(obj.lat){
+								geodata.push({lat:obj.lat.value, lon:obj.lon.value});
+							}
+							else if(obj.thumbnail){
+								thumbnail = obj.thumbnail.value;
+							}
+							else if(obj.description){
+								description = obj.description.value;
+							}
+							else if(obj.abstract){
+								abstrct = obj.abstract.value;
+								label = obj.name.value;
+							}
+						});	
+
+						retobj = {
+							description : abstrct,
+							speak : description,
+							relationships : relationships,
+							geodata : geodata,
+							timedata : timedata,
+							thumbnail : thumbnail,
+							pictures : pictures,
+							label : label
+						};
+						onSuccess(retobj);	
+				
+					});
+				
+
+				/*
+				
+				
+				
+				//get list of all images on wiki page
+				$.ajax({
+					dataType : 'json', // no CORS
+					url : 'https://en.wikipedia.org/w/api.php',
+					data : {
+						action : 'query',
+						prop : 'images',
+						format : 'json',
+						titles : page,
+						generator : 'images',
+						gimlimit : '500'
+					},
+					success : function (imagedata) {
+						
+						console.log(imagedata);
+						
+						var relationships = [];
+						var geodata = [];
+						var timedata = [];
+						var description = "";
+						var abstrct = "";
+						var thumbnail = "";
+						var pictures = [];
+						var label = "";
+						
+						var endfunc = function (imagedata) {
+							if(imagedata){
+								var keys = Object.keys(imagedata.query.pages);
+								for(var i=0; i<keys.length; i++){
+									var tmp = imagedata.query.pages[keys[i]].imageinfo[0];
+									pictures.push({
+										url : tmp.url,
+										description_url : tmp.descriptionurl,
+										short_description_url : tmp.descriptionshorturl
+									});
+								}
+							}
+							result.results.bindings.map(function(obj){
+								if(obj.property){
+									if (!relationships[obj.property.value]) {
+										relationships[obj.property.value] = {};
+									}
+									relationships[obj.property.value][obj.relationship_label.value] = obj.relationship.value;
+								}
+								else if(obj.time_label){
+									timedata.push({label:obj.time_label.value, value:obj.time_value.value});
+								}
+								else if(obj.lat){
+									geodata.push({lat:obj.lat.value, lon:obj.lon.value});
+								}
+								else if(obj.thumbnail){
+									thumbnail = obj.thumbnail.value;
+								}
+								else if(obj.description){
+									description = obj.description.value;
+								}
+								else if(obj.abstract){
+									abstrct = obj.abstract.value;
+									label = obj.name.value;
+								}
+							});	
+
+							retobj = {
+								description : abstrct,
+								speak : description,
+								relationships : relationships,
+								geodata : geodata,
+								timedata : timedata,
+								thumbnail : thumbnail,
+								pictures : pictures,
+								label : label
+							};
+							onSuccess(retobj);								
+						}
+						
+						var keys = Object.keys(imagedata.query.pages);
+						var tmp = imagedata.query.pages[keys[0]].images;
+						if(tmp){
+							titles = []
+							for(var i=0; i<tmp.length; i++){
+								titles.push(tmp[i].title.replace(/ /g,"_"));//replace spaces with underscores
+							}
+							//get actual urls of all images on wiki page
+							$.ajax({
+								dataType : 'json', // no CORS
+								url : "https://en.wikipedia.org/w/api.php",
+								data : {
+									action : 'query',
+									prop : 'imageinfo',
+									iiprop : 'url',
+									format : 'json',
+									titles : titles.join("|")
+								},
+								success : endfunc
+							});	
+						}else{
+							endfunc();
+						}						
+					}
+				});*/
+			}, onFail, true));
+			
+			
+	},
+	
+	
+	
+	
 
 	// Fetch Wikipedia's infobox widget
 	getInfobox : function (page, onSuccess, onFail) {
@@ -334,16 +629,19 @@ module.exports = {
 
 	// Helper to format abstract, removing references and sentences in parenthesis
 	getFormattedDescription : function (text) {
-		return text
-		.replace(/\[.*\d.*\]/g, '')
-		.replace(/\(.*\)/g, '');
+		return text;
+		//.replace(/\[.*\d.*\]/g, '')
+		//.replace(/\(.*\)/g, '');
 	},
 
 	// Helper to get first sentence from abstract (description)
 	getFirstSentence : function (text) {
-		if (text.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)) {
-			return text.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)[1];
+		if (text.match(/^(.*?)[.?!]\s/)){
+			return text.match(/^(.*?)[.?!]\s/)[1] + ".";
 		}
+		//if (text.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)) {
+		//	return text.match(/(^.*?[a-z]{2,}[.!?])\s+\W*[A-Z]/)[1];
+		//}
 		return text;
 	}
 

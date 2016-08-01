@@ -67,8 +67,8 @@ var handleSearchByKeyword = function (keyword) {
 				}
 			}
 			// Speak first sentence of the description
-			var formatted_description = DBpedia.getFormattedDescription(results[0].description);
-			var first_sentence = DBpedia.getFirstSentence(formatted_description);
+			/*var formatted_description = DBpedia.getFormattedDescription(results[0].description);
+			var first_sentence = DBpedia.getFirstSentence(formatted_description);*/
 
 			DBpedia.getInfobox(results[0].uri.split('/').pop().trim(), function (data) {
 				var infobox = $('<div>' + data.replace(/\/\//g, 'https://') + '</div>').children('.infobox');
@@ -88,7 +88,25 @@ var handleSearchByKeyword = function (keyword) {
 						}
 					});
 				}
-				DBpedia.getRelationshipsByUri(results[0].uri, function (relationships) {
+				
+				DBpedia.getAllData(results[0].uri, function(result){
+					var formatted_description = DBpedia.getFormattedDescription(result.description);
+					var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
+					
+					SearchStorage.add({
+						uri : results[0].uri,
+						label : results[0].label,
+						description : formatted_description,
+						speak : first_sentence,
+						relationships : result.relationships,
+						geodata : result.geodata,
+						timedata : result.timedata,
+						thumbnail : result.thumbnail,
+						pictures : result.pictures
+					});
+				});
+				
+				/*DBpedia.getRelationshipsByUri(results[0].uri, function (relationships) {
 					DBpedia.getAbstractByUriAndLanguage(results[0].uri, 'zh', function (zh_result) {
 						DBpedia.getLocationByUri(results[0].uri, function(geodata) {
 							DBpedia.getTimeDataByUri(results[0].uri, function(timedata) {
@@ -114,7 +132,7 @@ var handleSearchByKeyword = function (keyword) {
 							});
 						});
 					});
-				});
+				});*/
 			});
 		} else {
 			showVoiceAndConsoleResponse('I\'m sorry, I couldn\'t find any information with keyword ' + keyword);
@@ -129,8 +147,6 @@ var handleAddLastSearchResultToGraph = function () {
 		lastSearchResult.uri,
 		lastSearchResult.label,
 		lastSearchResult.relationships,
-		lastSearchResult.geodata,
-		lastSearchResult.timedata,
 		true);
 }
 
@@ -141,8 +157,6 @@ var handleAddResourceToGraph = function (uri, redraw) {
 		searchResult.uri,
 		searchResult.label,
 		searchResult.relationships,
-		searchResult.geodata,
-		searchResult.timedata,
 		typeof redraw === 'undefined' ? true : redraw);
 }
 
@@ -291,7 +305,7 @@ var handleGrow = function (keyword, keyword2, limit) {
 			processNextUriOnQueue(queue);
 		} else {
 			// Search for English abstract
-			DBpedia.getAbstractByUriAndLanguage(uri, 'en', function (abstract_result) { // If abstract not found on the uri, move on
+			/*DBpedia.getAbstractByUriAndLanguage(uri, 'en', function (abstract_result) { // If abstract not found on the uri, move on
 				if (abstract_result.results.bindings.length === 0) {
 					processNextUriOnQueue(queue);
 				} else {
@@ -334,6 +348,33 @@ var handleGrow = function (keyword, keyword2, limit) {
 						});
 					});
 				}
+			});*/
+
+			DBpedia.getAllData(uri, function(result){
+				if (result.description == "") {
+					processNextUriOnQueue(queue);
+				}else{
+					var formatted_description = DBpedia.getFormattedDescription(result.description);
+					var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
+					SearchStorage.add({
+						uri : uri,
+						label : result.label,
+						description : formatted_description,
+						speak : first_sentence,
+						relationships : result.relationships,
+						geodata : result.geodata,
+						timedata : result.timedata,
+						pictures : result.pictures,
+						thumbnail : result.thumbnail
+					});
+					// Add resource to graph
+					handleAddResourceToGraph(uri, false);
+					// Add outgoing relationships to grow queue
+					addRelationshipsFromUriToQueue(uri, queue);
+					// Add incoming relationships to grow queue
+					addIncomingRelationshipsFromUriToQueue(uri, queue, processNextUriOnQueue);
+				}
+				
 			});
 		}
 	}

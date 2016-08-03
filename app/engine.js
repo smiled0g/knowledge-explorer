@@ -61,7 +61,6 @@ var handleSearchByKeyword = function (keyword) {
 					results.map(function (result) {
 						results_uri_label[result.uri] = result.label;
 					});
-					console.log(results_uri_label);
 					Console.showResultsList(results_uri_label);
 					return;
 				}
@@ -70,69 +69,71 @@ var handleSearchByKeyword = function (keyword) {
 			/*var formatted_description = DBpedia.getFormattedDescription(results[0].description);
 			var first_sentence = DBpedia.getFirstSentence(formatted_description);*/
 
-			DBpedia.getInfobox(results[0].uri.split('/').pop().trim(), function (data) {
-				var infobox = $('<div>' + data.replace(/\/\//g, 'https://') + '</div>').children('.infobox');
-				if (infobox.length) {
-					//Voice.speak(first_sentence);
-					showConsoleInfoboxResponse(infobox, {
-						add : {
-							uri : results[0].uri,
-							name : results[0].label
-						}
-					});
-				} else {
-					showVoiceAndConsoleResponse(first_sentence, {
-						add : {
-							uri : results[0].uri,
-							name : results[0].label
-						}
-					});
-				}
+			
 				
-				DBpedia.getAllData(results[0].uri, function(result){
-					var formatted_description = DBpedia.getFormattedDescription(result.description);
-					var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
-					
-					SearchStorage.add({
-						uri : results[0].uri,
-						label : results[0].label,
-						description : formatted_description,
-						speak : first_sentence,
-						relationships : result.relationships,
-						geodata : result.geodata,
-						timedata : result.timedata,
-						thumbnail : result.thumbnail,
-						pictures : result.pictures
-					});
+			DBpedia.getAllData(results[0].uri, function(result){
+				var formatted_description = DBpedia.getFormattedDescription(result.description);
+				var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
+				
+				SearchStorage.add({
+					uri : results[0].uri,
+					label : results[0].label,
+					description : formatted_description,
+					speak : first_sentence,
+					relationships : result.relationships,
+					geodata : result.geodata,
+					timedata : result.timedata,
+					thumbnail : result.thumbnail,
+					pictures : result.pictures
 				});
 				
-				/*DBpedia.getRelationshipsByUri(results[0].uri, function (relationships) {
-					DBpedia.getAbstractByUriAndLanguage(results[0].uri, 'zh', function (zh_result) {
-						DBpedia.getLocationByUri(results[0].uri, function(geodata) {
-							DBpedia.getTimeDataByUri(results[0].uri, function(timedata) {
-								
-								var zh_abstract = "",
-									zh_label = "";
-								if (zh_result.results.bindings.length > 0) {
-									zh_abstract = zh_result.results.bindings[0].abs.value,
-									zh_label = zh_result.results.bindings[0].name.value;
-								}
-								var zh_speak = zh_abstract.split("。")[0];
-								SearchStorage.add({
-									uri : results[0].uri,
-									label : results[0].label,
-									zh_label : zh_label,
-									description : formatted_description,
-									speak : first_sentence,
-									zh_speak : zh_speak,
-									relationships : relationships,
-									geodata: geodata,
-									timedata: timedata
-								});
+				DBpedia.getInfobox(results[0].uri.split('/').pop().trim(), function (data) {
+					var infobox = $('<div>' + data.replace(/\/\//g, 'https://') + '</div>').children('.infobox');
+					if (infobox.length) {
+						//Voice.speak(first_sentence);
+						showConsoleInfoboxResponse(infobox, {
+							add : {
+								uri : results[0].uri,
+								name : results[0].label
+							}
+						});
+					} else {
+						showVoiceAndConsoleResponse(first_sentence, {
+							add : {
+								uri : results[0].uri,
+								name : results[0].label
+							}
+						});
+					}
+			});
+				
+			/*DBpedia.getRelationshipsByUri(results[0].uri, function (relationships) {
+				DBpedia.getAbstractByUriAndLanguage(results[0].uri, 'zh', function (zh_result) {
+					DBpedia.getLocationByUri(results[0].uri, function(geodata) {
+						DBpedia.getTimeDataByUri(results[0].uri, function(timedata) {
+							
+							var zh_abstract = "",
+								zh_label = "";
+							if (zh_result.results.bindings.length > 0) {
+								zh_abstract = zh_result.results.bindings[0].abs.value,
+								zh_label = zh_result.results.bindings[0].name.value;
+							}
+							var zh_speak = zh_abstract.split("。")[0];
+							SearchStorage.add({
+								uri : results[0].uri,
+								label : results[0].label,
+								zh_label : zh_label,
+								description : formatted_description,
+								speak : first_sentence,
+								zh_speak : zh_speak,
+								relationships : relationships,
+								geodata: geodata,
+								timedata: timedata
 							});
 						});
 					});
-				});*/
+				});
+			});*/
 			});
 		} else {
 			showVoiceAndConsoleResponse('I\'m sorry, I couldn\'t find any information with keyword ' + keyword);
@@ -375,6 +376,9 @@ var handleGrow = function (keyword, keyword2, limit) {
 					addIncomingRelationshipsFromUriToQueue(uri, queue, processNextUriOnQueue);
 				}
 				
+			}, 
+			function(){
+				processNextUriOnQueue(queue);
 			});
 		}
 	}

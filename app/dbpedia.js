@@ -438,6 +438,14 @@ module.exports = {
 						var pictures = [];
 						var label = "";
 						
+						if(data.parse === undefined){
+							if(onFail !== undefined){
+								onFail();
+							}
+							return;
+							
+						}
+						
 						html = data.parse.text['*'].replace(/img/g, 'noloadimg');
 						tmp = $(html);
 						tmp.find('.image noloadimg').each(function(){

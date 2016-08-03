@@ -306,7 +306,6 @@ var generateXMLString = function () {
 		
 		pdat = sKey.pictures || [];
 		pdat.map(function (data) {
-			console.log(data);
 			var picture = {
 				$ : {
 					url : data.url || '',

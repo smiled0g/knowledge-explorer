@@ -1,7 +1,7 @@
 /*
   Persistent storage that caches queries
  */
-
+/*
 var storage = require('node-persist'),
     crypto = require('crypto');
 
@@ -30,3 +30,4 @@ module.exports = {
   set: setCache,
   get: getCache
 }
+*/

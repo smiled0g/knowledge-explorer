@@ -2,8 +2,23 @@
   "name": "knowledge-explorer",
   "version": "0.1.0",
   "main": "main.js",
+  "productName": "Knowledge Explorer",
+  "description": "A desktop app that generated knowledge graph from resources in DBPedia.",
+  "homepage": "https://github.com/smiled0g/knowledge-explorer",
+  "author": "RPI",
   "scripts": {
-    "start": "npm install && ./node_modules/.bin/electron ."
+    "start": "npm install && ./node_modules/.bin/electron .",
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "build": {
+    "appId": "rellink.knowledgeexplorer",
+    "mac": {
+      "category": "references"
+    },
+    "win": {
+      "iconUrl": "https://raw.githubusercontent.com/smiled0g/knowledge-explorer/master/icon/Icon.png"
+    }
   },
   "dependencies": {
     "body-parser": "^1.15.0",

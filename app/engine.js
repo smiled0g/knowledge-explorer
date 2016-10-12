@@ -69,12 +69,12 @@ var handleSearchByKeyword = function (keyword) {
 			/*var formatted_description = DBpedia.getFormattedDescription(results[0].description);
 			var first_sentence = DBpedia.getFirstSentence(formatted_description);*/
 
-			
-				
+
+
 			DBpedia.getAllData(results[0].uri, function(result){
 				var formatted_description = DBpedia.getFormattedDescription(result.description);
 				var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
-				
+
 				SearchStorage.add({
 					uri : results[0].uri,
 					label : results[0].label,
@@ -86,7 +86,7 @@ var handleSearchByKeyword = function (keyword) {
 					thumbnail : result.thumbnail,
 					pictures : result.pictures
 				});
-				
+
 				DBpedia.getInfobox(results[0].uri.split('/').pop().trim(), function (data) {
 					var infobox = $('<div>' + data.replace(/\/\//g, 'https://') + '</div>').children('.infobox');
 					if (infobox.length) {
@@ -106,12 +106,12 @@ var handleSearchByKeyword = function (keyword) {
 						});
 					}
 			});
-				
+
 			/*DBpedia.getRelationshipsByUri(results[0].uri, function (relationships) {
 				DBpedia.getAbstractByUriAndLanguage(results[0].uri, 'zh', function (zh_result) {
 					DBpedia.getLocationByUri(results[0].uri, function(geodata) {
 						DBpedia.getTimeDataByUri(results[0].uri, function(timedata) {
-							
+
 							var zh_abstract = "",
 								zh_label = "";
 							if (zh_result.results.bindings.length > 0) {
@@ -172,6 +172,106 @@ var handleSearchByOntology = function (keyword, ontology) {
 		} else {
 			showVoiceAndConsoleResponse('I\'m sorry, I couldn\'t find any ' + ontology.toLowerCase() + ' associated with resource ' + keyword);
 		}
+	});
+}
+
+var handleComplete = function(keywordList) {
+	keywords = keywordList.split(',');
+	queue = { added: {}, queue: [] };
+
+	var addUriToQueue = function (uri) {
+		if (!queue.added[uri]) {
+			queue.added[uri] = true;
+			queue.queue.push(uri);
+		}
+	};
+
+	var addRelationshipsFromUriToQueue = function (uri, callback) {
+		Object.keys(SearchStorage.get(uri).relationships).map(function (neighbor_uri) {
+			addUriToQueue(neighbor_uri, queue);
+		});
+		if(callback) callback();
+	}
+
+	var addIncomingRelationshipsFromUriToQueue = function (uri, callback) {
+		DBpedia.getIncomingRelationshipsByUri(uri, function (incoming_relationships) {
+			Object.keys(incoming_relationships).map(function (incoming_uri) {
+				if (incoming_relationships[incoming_uri]['Wikipage redirect'] ||
+					incoming_relationships[incoming_uri]['Wikipage disambiguates'])
+					return;
+
+				addUriToQueue(incoming_uri, queue);
+			});
+			if(callback) callback();
+		});
+	}
+
+	var processNextUriOnQueue = function () {
+		if(queue.queue.length) {
+			var uri = queue.queue.shift();
+
+			DBpedia.getAllData(uri, function(result){
+				if (result.description == "") {
+					processNextUriOnQueue(queue);
+				} else {
+					var formatted_description = DBpedia.getFormattedDescription(result.description);
+					var first_sentence = result.speak || DBpedia.getFirstSentence(formatted_description);
+					SearchStorage.add({
+						uri : uri,
+						label : result.label,
+						description : formatted_description,
+						speak : first_sentence,
+						relationships : result.relationships,
+						geodata : result.geodata,
+						timedata : result.timedata,
+						pictures : result.pictures,
+						thumbnail : result.thumbnail
+					});
+					handleAddResourceToGraph(uri, false);
+					onProgress((toComplete - queue.queue.length) * 100.0 / toComplete);
+					processNextUriOnQueue();
+				}
+			},
+			function(){
+				processNextUriOnQueue();
+			});
+		} else onFinish();
+	}
+
+	// Go through all the keywords, and add all immediate uris to queue
+	var addAllNeighborsToQueue = function(index, onSuccess) {
+		var keyword = keywords[index].replace(/\W/g, '');
+		var uri = Knowledge.getUriFromRefOrName(keyword) || SearchStorage.getUriFromName(keyword);
+
+
+		addRelationshipsFromUriToQueue(uri,
+			addIncomingRelationshipsFromUriToQueue.bind(this, uri,
+				function() {
+					if(index < keywords.length-1) {
+						addAllNeighborsToQueue(index+1, onSuccess);
+					} else onSuccess();
+				}
+			)
+		);
+	}
+
+	var onProgress = function () {}
+	var onFinish = function () {
+		Knowledge.drawGraph();
+		onProgress(100);
+	}
+	var toComplete;
+
+	Console.showProgressResponse(
+		'Please wait while completing resource information is in progress.',
+		'Completing done!',
+		function (progressListener) {
+		onProgress = progressListener;
+	});
+
+	addAllNeighborsToQueue(0, function() {
+		toComplete = queue.queue.length;
+		processNextUriOnQueue();
 	});
 }
 
@@ -375,8 +475,8 @@ var handleGrow = function (keyword, keyword2, limit) {
 					// Add incoming relationships to grow queue
 					addIncomingRelationshipsFromUriToQueue(uri, queue, processNextUriOnQueue);
 				}
-				
-			}, 
+
+			},
 			function(){
 				processNextUriOnQueue(queue);
 			});
@@ -461,23 +561,23 @@ var showNodeOnGraph = function(keyword){
 	var keyword = keyword.substring(5),
 		nodeUri = Knowledge.getUriFromRefOrName(keyword),
 		nodeRef = Knowledge.getRefFromUri(nodeUri);
-	
+
 	graph.graph.node.each(function (d) {
 		if (d.ref == nodeRef){
 			Graph.selectObject(d, this);
 		}
-	});	
+	});
 }
 
 var handleNarration = function(keyword){
 	//create a narration starting from the specified node
-	
+
 	var keyword = keyword.replace(/\W/g, '')
 		nodeUri = Knowledge.getUriFromRefOrName(keyword),
 		nodeRef = Knowledge.getRefFromUri(nodeUri);
-	
+
 	Narration.makeNarrationForNode(nodeRef);
-	
+
 }
 
 var commands = {
@@ -519,6 +619,7 @@ var commands = {
 		});
 	},
 	'Grow *keyword *keyword2 (for *limit)' : handleGrow,
+	'Complete *keywordList' : handleComplete,
 	'Analogy (for) *keyword' : handleMakeAnalogy,
 	'Start server' : HttpServer.start,
 	'Stop server' : HttpServer.stop,

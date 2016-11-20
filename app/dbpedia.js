@@ -260,8 +260,7 @@ module.exports = {
 			"PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>",
 			"PREFIX dbo: <http://dbpedia.org/ontology/>",
 			"SELECT ?lat ?lon WHERE {",
-			"<" + uri + "> rdf:type dbo:Place ;",
-			"geo:lat ?lat ;",
+			"<" + uri + "> geo:lat ?lat ;",
 			"geo:long ?lon .",
 			"}"
 		].join(" ");
@@ -400,8 +399,7 @@ module.exports = {
 			"FILTER regex(?r2,'dbpedia.org','i')",
 			"FILTER (langMatches(lang(?rl2),'en')).",
 			"}UNION{",
-			"<" + uri + "> rdf:type dbo:Place ;",
-			"geo:lat ?lat ;",
+			"<" + uri + "> geo:lat ?lat ;",
 			"geo:long ?lon .",
 			"}UNION{",
 			"<" + uri + "> <http://www.w3.org/2000/01/rdf-schema#comment> ?desc",

@@ -8,7 +8,8 @@ AIMind = require('./aimind'),
 HttpServer = require('./http-server'),
 Analogy = require('./analogy'),
 Narration = require('./narrativebackend'),
-Interest = require('./userinterest');
+Interest = require('./userinterest'),
+News = require('./news');
 
 var run = function (data) {
 	Graph.init(Knowledge.getGraph());
@@ -580,12 +581,54 @@ var handleNarration = function(keyword){
 
 }
 
+var handleExploreNews = function(keyword, limit) {
+	var query = keyword.trim().replace(/[^a-zA-Z0-9]+/g, ',');
+	console.log('News query',query, limit)
+	News.search(query, limit, function(results) {
+		console.log(results);
+		// Add themes to graph
+		Object.keys(results.themes).forEach(i => {
+			Knowledge.addNode(
+				News.themePrefix+i,
+				i,
+				results.themes[i],
+				false);
+		});
+		// Add names to graph
+		Object.keys(results.names).forEach(i => {
+			Knowledge.addNode(
+				News.namePrefix+i,
+				i,
+				results.names[i],
+				false);
+		});
+		// Add news entries to graph
+		results.features.forEach(f => {
+			relationships = {};
+			f.themes.forEach(t => {
+				relationships[News.themePrefix+t] = { theme: News.themePrefix }
+			});
+			f.names.forEach(n => {
+				relationships[News.namePrefix+n] = { name: News.namePrefix }
+			});
+			Knowledge.addNode(
+				f.properties.url,
+				f.properties.url,
+				relationships,
+				false);
+		});
+		// Render graph
+		Knowledge.drawGraph();
+	});
+}
+
 var commands = {
 	'(hi) (hello) jimmy' : function () {
 		showVoiceAndConsoleResponse('I\'m here!');
 	},
 	'What is *keyword' : handleSearchByKeyword,
 	'Who is *keyword' : handleSearchByKeyword,
+	'Find news (about) *keyword (for *limit)': handleExploreNews,
 	'Find *keyword' : handleSearchByKeyword,
 	'Search (for) *keyword' : handleSearchByKeyword,
 	'Add (to graph)' : handleAddLastSearchResultToGraph,
